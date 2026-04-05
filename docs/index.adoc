@@ -1,0 +1,155 @@
+= Orri
+:package: io.github.rahulsom
+:package-path: io/github/rahulsom
+:package-path-encoded: io%2Fgithub%2Frahulsom
+:snapshot-prefix: image:https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2F{package-path-encoded}%2F
+:snapshot-middle: %2Fmaven-metadata.xml&style=for-the-badge&label=S[alt=Maven Snapshot,height=30,link="https://central.sonatype.com/repository/maven-snapshots/{package-path}/
+:snapshot-suffix: /maven-metadata.xml"]
+:central-prefix: image:https://img.shields.io/maven-central/v/{package}/
+:central-middle: ?strategy=highestVersion&filter=!*-rc*&style=for-the-badge&label=R&color=green[alt=Maven Central Version,height=30,link="https://central.sonatype.com/artifact/{package}/
+:central-suffix: /overview"]
+:deprecated-middle: ?style=for-the-badge&label=R&color=lightgrey[alt=Maven Central Version,height=30,link="https://central.sonatype.com/artifact/{package}/
+:nofooter:
+:source-highlighter: rouge
+:toc: left
+:icons: font
+
+Orri exposes a Google spreadsheet as a JDBC database.
+
+image:https://img.shields.io/github/commits-since/rahulsom/orri/latest?style=for-the-badge[GitHub commits since latest release, link="https://github.com/rahulsom/orri/releases/new"]
+
+== Available versions
+
+{central-prefix}orri{central-middle}orri{central-suffix}
+{snapshot-prefix}orri{snapshot-middle}orri{snapshot-suffix}
+
+[source,gradle]
+----
+dependencies {
+    // ...
+    implementation 'io.github.rahulsom:orri:<VERSION>'
+}
+----
+
+== Summary
+
+Each worksheet becomes a table.
+The first row in each worksheet becomes the column header.
+The remaining rows become table data.
+Google Sheets filter views are exposed as JDBC views.
+Boolean cells can come from either literal `true` and `false` values or checkbox-backed cells.
+Connections are writable by default for worksheet tables.
+
+== JDBC URL
+
+The JDBC URL uses the spreadsheet id directly.
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/DocumentationSamplesTest.java[tag=jdbc-url]
+----
+
+For the sample spreadsheet below, the spreadsheet id is `1yRm-oPjuUGvfy4uhGc-woytgXQ7nSpxalWVX9djruSQ`.
+
+`https://docs.google.com/spreadsheets/d/1yRm-oPjuUGvfy4uhGc-woytgXQ7nSpxalWVX9djruSQ/edit`
+
+== Authentication
+
+This driver supports several ways to authenticate with the Google Sheets API.
+Use an API key for public spreadsheets.
+Use a service account or an OAuth access token for private spreadsheets.
+
+=== Public Spreadsheet With API Key
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/DocumentationSamplesTest.java[tag=connect-api-key]
+----
+
+=== Private Spreadsheet With A Service Account
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/DocumentationSamplesTest.java[tag=connect-service-account]
+----
+
+The `credentialsFile` property should point at a Google service account JSON key file.
+The service account must have access to the target spreadsheet.
+
+== Inspecting Schema
+
+Use JDBC metadata to discover worksheets, filter views, and columns.
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/DocumentationSamplesTest.java[tag=inspect-schema]
+----
+
+Worksheets are reported as `TABLE`.
+Filter views are reported as `VIEW`.
+
+== Managing Worksheets and Filter Views.
+
+A Worksheet in Google Sheets is created with `CREATE TABLE`.
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=create-table]
+----
+
+A Filter View in Google Sheets is created with `CREATE VIEW`.
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=create-view]
+----
+
+These can also be deleted with `DROP TABLE` and `DROP VIEW`.
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=drop]
+----
+
+== Modifying Data
+
+`INSERT`, `UPDATE`, and `DELETE` are supported for worksheet tables by default.
+
+Authenticate with OAuth or a service account when you need write access.
+
+Filter views remain read-only.
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=insert]
+
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=update]
+
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=delete]
+----
+
+After a successful mutation, the driver synchronizes the affected worksheet back to Google Sheets.
+If you want to force a read-only connection, set `readOnly=true` in the JDBC URL or connection properties.
+
+== Querying Data
+
+Once connected, you can query worksheets and filter views with normal SQL.
+Worksheets use their tab names as table names.
+Filter views use their filter view titles as view names.
+
+[source,java,indent=0]
+----
+include::../orri-jdbc/src/test/java/com/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=select]
+----
+
+In the example above, `Employees` is a worksheet and `Active Employees` is a filter view.
+Quoted identifiers are recommended when sheet names or filter view names contain spaces.
+
+== Type Mapping
+
+Columns are inferred from the worksheet contents.
+
+* Boolean columns map to JDBC booleans.
+* Numeric columns map to JDBC decimals.
+* All other columns map to JDBC strings.
+* If a checkbox column is used in Google Sheets, the driver exposes it as a boolean column when the rendered values are `true` and `false`.

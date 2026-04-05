@@ -1,0 +1,14 @@
+[versions]
+google-api-client = "2.9.0"
+google-auth = "1.40.0"
+google-oauth-client = "1.39.0"
+google-sheets = "v4-rev20260213-2.0.0"
+h2 = "2.4.240"
+junit = "6.0.1"
+
+[libraries]
+google-api-client-gson = { module = "com.google.api-client:google-api-client-gson", version.ref = "google-api-client" }
+google-auth-http = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "google-auth" }
+google-oauth-client-jetty = { module = "com.google.oauth-client:google-oauth-client-jetty", version.ref = "google-oauth-client" }
+google-sheets = { module = "com.google.apis:google-api-services-sheets", version.ref = "google-sheets" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }

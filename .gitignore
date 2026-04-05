@@ -1,0 +1,29 @@
+### SimplerGradle template
+# Gradle template
+.gradle/
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# JetBrains template
+/.idea/
+/*.iws
+/*.iml
+/*.ipr
+/out/
+/.idea_modules/
+
+# VS Code/Eclipse template
+.classpath
+.project
+.settings
+**/bin/
+.vscode
+
+# Other
+/.attach_pid*
+*.hprof
+.kotlin
+
+local/
