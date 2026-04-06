@@ -1,0 +1,26 @@
+name: Gradle Build
+
+on:
+  pull_request:
+    branches: ['*']
+  push:
+    branches: ['*']
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    uses: rahulsom/_/.github/workflows/gradle.yml@main
+    secrets:
+      ORG_GRADLE_PROJECT_SONATYPEUSERNAME: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
+      ORG_GRADLE_PROJECT_SONATYPEPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
+      ORG_GRADLE_PROJECT_SIGNINGKEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+      ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+    with:
+      codeql: true
+      codeql-actions: true
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+      packages: read
