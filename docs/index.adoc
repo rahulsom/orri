@@ -20,8 +20,8 @@ image:https://img.shields.io/github/commits-since/rahulsom/orri/latest?style=for
 
 == Available versions
 
-{central-prefix}orri{central-middle}orri-jdbc{central-suffix}
-{snapshot-prefix}orri{snapshot-middle}orri-jdbc{snapshot-suffix}
+{central-prefix}orri-jdbc{central-middle}orri-jdbc{central-suffix}
+{snapshot-prefix}orri-jdbc{snapshot-middle}orri-jdbc{snapshot-suffix}
 
 [source,gradle]
 ----

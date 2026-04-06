@@ -30,3 +30,7 @@ For snapshots, use this url.
 https://central.sonatype.com/repository/maven-snapshots/
 ----
 
+== Available versions
+
+{central-prefix}orri-jdbc{central-middle}orri-jdbc{central-suffix}
+{snapshot-prefix}orri-jdbc{snapshot-middle}orri-jdbc{snapshot-suffix}
