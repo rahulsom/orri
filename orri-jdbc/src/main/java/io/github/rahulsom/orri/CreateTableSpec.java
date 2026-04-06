@@ -1,4 +1,4 @@
-package com.github.rahulsom.orri;
+package io.github.rahulsom.orri;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

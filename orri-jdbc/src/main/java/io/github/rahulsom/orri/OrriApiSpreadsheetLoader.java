@@ -1,4 +1,4 @@
-package com.github.rahulsom.orri;
+package io.github.rahulsom.orri;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;

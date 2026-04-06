@@ -1,4 +1,4 @@
-package com.github.rahulsom.orri;
+package io.github.rahulsom.orri;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

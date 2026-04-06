@@ -1,4 +1,4 @@
-package com.github.rahulsom.orri;
+package io.github.rahulsom.orri;
 
 import org.junit.jupiter.api.Test;
 
