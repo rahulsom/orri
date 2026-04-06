@@ -1,10 +1,6 @@
 plugins {
     `java-library`
-    alias(libs.plugins.waena.published)
-}
-
-repositories {
-    mavenCentral()
+    id("com.github.rahulsom.waena.published")
 }
 
 dependencies {

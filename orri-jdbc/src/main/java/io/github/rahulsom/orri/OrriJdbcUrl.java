@@ -7,10 +7,7 @@ import java.util.Properties;
 /**
  * Parsed representation of a {@code jdbc:orri:} connection URL.
  */
-record OrriJdbcUrl(
-        String originalUrl,
-        String spreadsheetId,
-        Properties properties) {
+record OrriJdbcUrl(String originalUrl, String spreadsheetId, Properties properties) {
 
     static final String PREFIX = "jdbc:orri:";
 

@@ -1,6 +1,9 @@
 package io.github.rahulsom.orri;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -10,16 +13,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 class DocumentationSamplesTest {
     // tag::jdbc-url[]
-    private static final String SPREADSHEET_URL =
-            "jdbc:orri:1yRm-oPjuUGvfy4uhGc-woytgXQ7nSpxalWVX9djruSQ";
+    private static final String SPREADSHEET_URL = "jdbc:orri:1yRm-oPjuUGvfy4uhGc-woytgXQ7nSpxalWVX9djruSQ";
     // end::jdbc-url[]
 
     @Test
@@ -68,14 +66,7 @@ class DocumentationSamplesTest {
     void queryWorksheetAndFilterView() throws Exception {
         List<String> rows = queryWorksheetAndFilterView(sampleDriver());
 
-        assertEquals(
-                List.of(
-                        "Alice -> true",
-                        "Bob -> false",
-                        "Carol -> true",
-                        "Alice",
-                        "Carol"),
-                rows);
+        assertEquals(List.of("Alice -> true", "Bob -> false", "Carol -> true", "Alice", "Carol"), rows);
     }
 
     private static List<String> queryWorksheetAndFilterView(OrriDriver driver) throws Exception {
@@ -86,9 +77,9 @@ class DocumentationSamplesTest {
 
         List<String> output = new ArrayList<>();
         try (Connection connection = driver.connect(SPREADSHEET_URL, properties);
-             Statement statement = connection.createStatement()) {
-            try (ResultSet worksheetRows = statement.executeQuery(
-                    "select \"Name\", \"Active\" from \"Employees\" order by \"Name\"")) {
+                Statement statement = connection.createStatement()) {
+            try (ResultSet worksheetRows =
+                    statement.executeQuery("select \"Name\", \"Active\" from \"Employees\" order by \"Name\"")) {
                 while (worksheetRows.next()) {
                     String name = worksheetRows.getString("Name");
                     boolean active = worksheetRows.getBoolean("Active");
@@ -96,8 +87,8 @@ class DocumentationSamplesTest {
                 }
             }
 
-            try (ResultSet filterViewRows = statement.executeQuery(
-                    "select \"Name\" from \"Active Employees\" order by \"Name\"")) {
+            try (ResultSet filterViewRows =
+                    statement.executeQuery("select \"Name\" from \"Active Employees\" order by \"Name\"")) {
                 while (filterViewRows.next()) {
                     output.add(filterViewRows.getString("Name"));
                 }
@@ -111,12 +102,8 @@ class DocumentationSamplesTest {
     void inspectSchema() throws Exception {
         SchemaSnapshot schemaSnapshot = inspectSchema(sampleDriver());
 
-        assertEquals(
-                List.of("Active Employees (VIEW)", "Employees (TABLE)"),
-                schemaSnapshot.relations());
-        assertEquals(
-                List.of("Name VARCHAR", "Active BOOLEAN", "Points DECIMAL"),
-                schemaSnapshot.columns());
+        assertEquals(List.of("Active Employees (VIEW)", "Employees (TABLE)"), schemaSnapshot.relations());
+        assertEquals(List.of("Name VARCHAR", "Active BOOLEAN", "Points DECIMAL"), schemaSnapshot.columns());
     }
 
     private static SchemaSnapshot inspectSchema(OrriDriver driver) throws Exception {
@@ -166,17 +153,14 @@ class DocumentationSamplesTest {
         properties.setProperty("accessToken", "your-oauth-access-token");
 
         try (Connection connection = driver.connect(SPREADSHEET_URL, properties);
-             Statement statement = connection.createStatement()) {
+                Statement statement = connection.createStatement()) {
             statement.executeUpdate(
                     "insert into \"Employees\" (\"Name\", \"Active\", \"Points\") values ('Dana', true, 9.5)");
-            statement.executeUpdate(
-                    "update \"Employees\" set \"Active\" = false where \"Name\" = 'Dana'");
-            statement.executeUpdate(
-                    "delete from \"Employees\" where \"Name\" = 'Dana'");
+            statement.executeUpdate("update \"Employees\" set \"Active\" = false where \"Name\" = 'Dana'");
+            statement.executeUpdate("delete from \"Employees\" where \"Name\" = 'Dana'");
 
             List<String> names = new ArrayList<>();
-            try (ResultSet resultSet = statement.executeQuery(
-                    "select \"Name\" from \"Employees\" order by \"Name\"")) {
+            try (ResultSet resultSet = statement.executeQuery("select \"Name\" from \"Employees\" order by \"Name\"")) {
                 while (resultSet.next()) {
                     names.add(resultSet.getString("Name"));
                 }
@@ -202,7 +186,7 @@ class DocumentationSamplesTest {
         List<String> createdTables = new ArrayList<>();
         List<String> createdViews = new ArrayList<>();
         try (Connection connection = driver.connect(SPREADSHEET_URL, properties);
-             Statement statement = connection.createStatement()) {
+                Statement statement = connection.createStatement()) {
             statement.execute("""
                     create table "Projects" (
                         "Name" varchar,
@@ -240,7 +224,7 @@ class DocumentationSamplesTest {
 
         List<String> droppedRelations = new ArrayList<>();
         try (Connection connection = driver.connect(SPREADSHEET_URL, properties);
-             Statement statement = connection.createStatement()) {
+                Statement statement = connection.createStatement()) {
             statement.execute("""
                     create table "Projects" (
                         "Name" varchar,
@@ -270,7 +254,7 @@ class DocumentationSamplesTest {
 
     private static int rowCount(Connection connection, String relationName) throws Exception {
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("select count(*) from \"" + relationName + "\"")) {
+                ResultSet resultSet = statement.executeQuery("select count(*) from \"" + relationName + "\"")) {
             assertTrue(resultSet.next());
             return resultSet.getInt(1);
         }
@@ -279,11 +263,11 @@ class DocumentationSamplesTest {
     private static OrriDriver sampleDriver() {
         return new OrriDriver(unusedUrl -> workbook(), new SpreadsheetSynchronizer() {
             @Override
-            public void syncWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {
-            }
+            public void syncWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {}
 
             @Override
-            public WorksheetSnapshot createWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {
+            public WorksheetSnapshot createWorksheet(
+                    OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {
                 return worksheet;
             }
 
@@ -293,12 +277,10 @@ class DocumentationSamplesTest {
             }
 
             @Override
-            public void deleteWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet) {
-            }
+            public void deleteWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet) {}
 
             @Override
-            public void deleteFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) {
-            }
+            public void deleteFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) {}
         });
     }
 
@@ -350,9 +332,7 @@ class DocumentationSamplesTest {
         return new SpreadsheetSnapshot(List.of(employees), List.of(activeEmployees));
     }
 
-    private record SchemaSnapshot(List<String> relations, List<String> columns) {
-    }
+    private record SchemaSnapshot(List<String> relations, List<String> columns) {}
 
-    private record SchemaManagementSnapshot(List<String> createdTables, List<String> createdViews) {
-    }
+    private record SchemaManagementSnapshot(List<String> createdTables, List<String> createdViews) {}
 }

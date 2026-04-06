@@ -7,9 +7,7 @@ import java.util.regex.Pattern;
 /**
  * Minimal SQL mutation descriptor used to detect worksheet write operations.
  */
-record SqlMutation(
-        Type type,
-        String relationName) {
+record SqlMutation(Type type, String relationName) {
     private static final Pattern INSERT_PATTERN =
             Pattern.compile("^\\s*insert\\s+into\\s+(\"(?:[^\"]|\"\")*\"|[^\\s(]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern UPDATE_PATTERN =

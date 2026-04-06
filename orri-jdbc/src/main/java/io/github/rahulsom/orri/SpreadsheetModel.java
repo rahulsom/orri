@@ -7,9 +7,7 @@ import java.util.Set;
 /**
  * Immutable snapshot of the worksheets and filter views in a spreadsheet.
  */
-record SpreadsheetSnapshot(
-        List<WorksheetSnapshot> worksheets,
-        List<FilterViewDefinition> filterViews) {
+record SpreadsheetSnapshot(List<WorksheetSnapshot> worksheets, List<FilterViewDefinition> filterViews) {
 
     Set<String> viewNames() {
         return filterViews.stream()
@@ -40,28 +38,17 @@ record SpreadsheetSnapshot(
  * Immutable representation of one worksheet exposed as a JDBC table.
  */
 record WorksheetSnapshot(
-        int sheetId,
-        String name,
-        List<String> columnNames,
-        List<ColumnType> columnTypes,
-        List<WorksheetRow> rows) {
-}
+        int sheetId, String name, List<String> columnNames, List<ColumnType> columnTypes, List<WorksheetRow> rows) {}
 
 /**
  * One logical worksheet row with its original Google Sheets row index.
  */
-record WorksheetRow(
-        int sheetRowIndex,
-        List<CellValue> cells) {
-}
+record WorksheetRow(int sheetRowIndex, List<CellValue> cells) {}
 
 /**
  * Cell value with both typed and display-oriented representations.
  */
-record CellValue(
-        Object typedValue,
-        String displayValue,
-        ValueKind kind) {
+record CellValue(Object typedValue, String displayValue, ValueKind kind) {
 
     static CellValue blank() {
         return new CellValue(null, null, ValueKind.BLANK);
@@ -80,26 +67,18 @@ record FilterViewDefinition(
         int startColumnIndex,
         Integer endColumnIndex,
         List<FilterCriterion> criteria,
-        List<SortKey> sortKeys) {
-}
+        List<SortKey> sortKeys) {}
 
 /**
  * One filter predicate applied to a filter-view column.
  */
 record FilterCriterion(
-        int columnIndex,
-        List<String> hiddenValues,
-        String conditionType,
-        List<String> conditionValues) {
-}
+        int columnIndex, List<String> hiddenValues, String conditionType, List<String> conditionValues) {}
 
 /**
  * Sort instruction applied while materializing a filter view.
  */
-record SortKey(
-        int columnIndex,
-        boolean descending) {
-}
+record SortKey(int columnIndex, boolean descending) {}
 
 /**
  * Normalized value categories used for filtering and type inference.

@@ -1,5 +1,9 @@
 package io.github.rahulsom.orri;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -8,9 +12,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.SheetsScopes;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,10 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 class OrriDriverIntegrationTest {
     private static final GsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -43,9 +42,8 @@ class OrriDriverIntegrationTest {
         properties.setProperty("accessToken", accessToken);
         properties.setProperty("applicationName", "orri-integration-test");
 
-        try (Connection connection = new OrriDriver()
-                .connect("jdbc:orri:" + spreadsheetId(), properties);
-            Statement statement = connection.createStatement()) {
+        try (Connection connection = new OrriDriver().connect("jdbc:orri:" + spreadsheetId(), properties);
+                Statement statement = connection.createStatement()) {
             assertNotNull(connection);
             assertFalse(connection.isReadOnly());
 
@@ -85,8 +83,7 @@ class OrriDriverIntegrationTest {
                         statement,
                         "select \"Name\", \"Active\", \"Score\" from \"%s\" order by \"Name\"".formatted(tableName));
                 List<String> initialViewRows = selectRows(
-                        statement,
-                        "select \"Name\", \"Active\" from \"%s\" order by \"Name\"".formatted(viewName));
+                        statement, "select \"Name\", \"Active\" from \"%s\" order by \"Name\"".formatted(viewName));
 
                 // tag::update[]
                 statement.executeUpdate("""
@@ -97,8 +94,7 @@ class OrriDriverIntegrationTest {
                 // end::update[]
 
                 List<String> updatedViewRows = selectRows(
-                        statement,
-                        "select \"Name\", \"Active\" from \"%s\" order by \"Name\"".formatted(viewName));
+                        statement, "select \"Name\", \"Active\" from \"%s\" order by \"Name\"".formatted(viewName));
 
                 // tag::delete[]
                 statement.executeUpdate("""
@@ -119,33 +115,11 @@ class OrriDriverIntegrationTest {
                 // end::drop[]
 
                 assertEquals(
-                        List.of(
-                                "Ada,true,10.50",
-                                "Bob,false,7.25",
-                                "Cy,true,9.75",
-                                "Dee,false,5.50",
-                                "Eve,true,8.00"),
+                        List.of("Ada,true,10.50", "Bob,false,7.25", "Cy,true,9.75", "Dee,false,5.50", "Eve,true,8.00"),
                         initialRows);
-                assertEquals(
-                        List.of(
-                                "Ada,true",
-                                "Cy,true",
-                                "Eve,true"),
-                        initialViewRows);
-                assertEquals(
-                        List.of(
-                                "Ada,true",
-                                "Cy,true",
-                                "Dee,true",
-                                "Eve,true"),
-                        updatedViewRows);
-                assertEquals(
-                        List.of(
-                                "Ada,true,10.50",
-                                "Cy,true,9.75",
-                                "Dee,true,6.50",
-                                "Eve,true,8.00"),
-                        finalRows);
+                assertEquals(List.of("Ada,true", "Cy,true", "Eve,true"), initialViewRows);
+                assertEquals(List.of("Ada,true", "Cy,true", "Dee,true", "Eve,true"), updatedViewRows);
+                assertEquals(List.of("Ada,true,10.50", "Cy,true,9.75", "Dee,true,6.50", "Eve,true,8.00"), finalRows);
             } finally {
                 dropIfExists(statement, viewName, true);
                 dropIfExists(statement, tableName, false);
@@ -160,17 +134,14 @@ class OrriDriverIntegrationTest {
         try (Reader reader = Files.newBufferedReader(clientSecretPath)) {
             GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, reader);
             GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                    new NetHttpTransport(),
-                    JSON_FACTORY,
-                    clientSecrets,
-                    List.of(SheetsScopes.SPREADSHEETS))
+                            new NetHttpTransport(), JSON_FACTORY, clientSecrets, List.of(SheetsScopes.SPREADSHEETS))
                     .setDataStoreFactory(new FileDataStoreFactory(tokenDirectory.toFile()))
                     .setAccessType("offline")
                     .build();
 
             var credential = new AuthorizationCodeInstalledApp(
-                    flow,
-                    new LocalServerReceiver.Builder().setPort(8888).build())
+                            flow,
+                            new LocalServerReceiver.Builder().setPort(8888).build())
                     .authorize("orri-integration-rw");
             if (credential.getRefreshToken() != null) {
                 boolean refreshed = credential.refreshToken();

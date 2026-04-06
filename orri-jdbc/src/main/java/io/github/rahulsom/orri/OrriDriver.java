@@ -78,13 +78,13 @@ public final class OrriDriver implements Driver {
      */
     @Override
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) {
-        return new DriverPropertyInfo[]{
-                property("apiKey", "Google API key for public spreadsheets"),
-                property("credentialsFile", "Path to a Google service account JSON file"),
-                property("credentialsJson", "Inline Google service account JSON"),
-                property("accessToken", "OAuth access token for the Sheets API"),
-                property("readOnly", "Whether the connection should remain read-only (default: false)"),
-                property("applicationName", "Application name sent to the Google Sheets API")
+        return new DriverPropertyInfo[] {
+            property("apiKey", "Google API key for public spreadsheets"),
+            property("credentialsFile", "Path to a Google service account JSON file"),
+            property("credentialsJson", "Inline Google service account JSON"),
+            property("accessToken", "OAuth access token for the Sheets API"),
+            property("readOnly", "Whether the connection should remain read-only (default: false)"),
+            property("applicationName", "Application name sent to the Google Sheets API")
         };
     }
 
