@@ -37,6 +37,9 @@ class OrriDriverIntegrationTest {
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String tableName = "Integration_" + suffix;
         String viewName = "Integration View " + suffix;
+        String alterTableName = "Integration Alter_" + suffix;
+        String renamedAlterTableName = "Integration Alter Renamed_" + suffix;
+        String renamedViewName = "Integration Renamed View " + suffix;
 
         Properties properties = new Properties();
         properties.setProperty("accessToken", accessToken);
@@ -103,14 +106,68 @@ class OrriDriverIntegrationTest {
                         """.formatted(tableName));
                 // end::delete[]
 
+                // tag::alter-table[]
+                statement.execute("""
+                        create table "%s" (
+                            "Name" varchar,
+                            "Score" decimal(10, 2)
+                        )
+                        """.formatted(alterTableName));
+                statement.executeUpdate("""
+                        insert into "%s" ("Name", "Score") values
+                        ('Ada', 10.5)
+                        """.formatted(alterTableName));
+                statement.execute("""
+                        alter table "%s"
+                        rename to "%s"
+                        """.formatted(alterTableName, renamedAlterTableName));
+                statement.execute("""
+                        alter table "%s"
+                        add column "Notes" varchar
+                        """.formatted(renamedAlterTableName));
+                statement.executeUpdate("""
+                        update "%s"
+                        set "Notes" = 'top performer'
+                        where "Name" = 'Ada'
+                        """.formatted(renamedAlterTableName));
+                statement.execute("""
+                        alter table "%s"
+                        alter column "Notes"
+                        rename to "Comment"
+                        """.formatted(renamedAlterTableName));
+                statement.execute("""
+                        alter table "%s"
+                        drop column "Score"
+                        """.formatted(renamedAlterTableName));
+                // end::alter-table[]
+
+                // tag::alter-view[]
+                statement.execute("""
+                        alter view "%s"
+                        rename to "%s"
+                        """.formatted(viewName, renamedViewName));
+                statement.execute("""
+                        alter view "%s" as
+                        select "Name"
+                        from "%s"
+                        where "Name" = 'Ada'
+                        """.formatted(renamedViewName, tableName));
+                // end::alter-view[]
+
                 // tag::select[]
                 List<String> finalRows = selectRows(
                         statement,
                         "select \"Name\", \"Active\", \"Score\" from \"%s\" order by \"Name\"".formatted(tableName));
+                List<String> alteredTableRows = selectRows(
+                        statement,
+                        "select \"Name\", \"Comment\" from \"%s\" order by \"Name\"".formatted(renamedAlterTableName));
+                List<String> finalViewRows = selectRows(
+                        statement, "select \"Name\" from \"%s\" order by \"Name\"".formatted(renamedViewName));
                 // end::select[]
 
                 // tag::drop[]
-                statement.execute("drop view \"%s\"".formatted(viewName));
+                statement.execute("drop view \"%s\"".formatted(renamedViewName));
+                statement.execute("drop table \"%s\"".formatted(renamedAlterTableName));
                 statement.execute("drop table \"%s\"".formatted(tableName));
                 // end::drop[]
 
@@ -120,8 +177,13 @@ class OrriDriverIntegrationTest {
                 assertEquals(List.of("Ada,true", "Cy,true", "Eve,true"), initialViewRows);
                 assertEquals(List.of("Ada,true", "Cy,true", "Dee,true", "Eve,true"), updatedViewRows);
                 assertEquals(List.of("Ada,true,10.50", "Cy,true,9.75", "Dee,true,6.50", "Eve,true,8.00"), finalRows);
+                assertEquals(List.of("Ada,top performer"), alteredTableRows);
+                assertEquals(List.of("Ada"), finalViewRows);
             } finally {
+                dropIfExists(statement, renamedViewName, true);
                 dropIfExists(statement, viewName, true);
+                dropIfExists(statement, renamedAlterTableName, false);
+                dropIfExists(statement, alterTableName, false);
                 dropIfExists(statement, tableName, false);
             }
         }

@@ -257,6 +257,101 @@ class OrriDriverTest {
         assertEquals(List.of("Active Employees"), synchronizer.deletedFilterViews);
     }
 
+    @Test
+    void alterTableRenameRenamesWorksheetInSynchronizer() throws Exception {
+        RecordingSynchronizer synchronizer = new RecordingSynchronizer();
+        OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
+
+        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+            assertFalse(connection.createStatement().execute("alter table \"Employees\" rename to \"People\""));
+
+            try (ResultSet resultSet =
+                    connection.createStatement().executeQuery("select \"Name\" from \"People\" order by \"Name\"")) {
+                assertTrue(resultSet.next());
+                assertEquals("Alice", resultSet.getString(1));
+                assertTrue(resultSet.next());
+                assertEquals("Bob", resultSet.getString(1));
+                assertFalse(connection.createStatement().execute("drop view \"Active Employees\""));
+            }
+        }
+
+        assertEquals(List.of("Employees->People"), synchronizer.renamedWorksheets);
+    }
+
+    @Test
+    void alterTableRenameColumnSynchronizesWorksheet() throws Exception {
+        RecordingSynchronizer synchronizer = new RecordingSynchronizer();
+        OrriDriver driver = new OrriDriver(unusedUrl -> workbookWithoutViews(), synchronizer);
+
+        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+            assertFalse(connection
+                    .createStatement()
+                    .execute("alter table \"Employees\" alter column \"Points\" rename to \"Score\""));
+
+            try (ResultSet resultSet = connection
+                    .createStatement()
+                    .executeQuery("select \"Name\", \"Score\" from \"Employees\" order by \"Name\"")) {
+                assertTrue(resultSet.next());
+                assertEquals("Alice", resultSet.getString(1));
+                assertEquals(new BigDecimal("10.5000000000"), resultSet.getBigDecimal(2));
+            }
+        }
+
+        assertEquals(List.of("Employees"), synchronizer.syncedWorksheets);
+    }
+
+    @Test
+    void alterViewRenameRenamesFilterViewInSynchronizer() throws Exception {
+        RecordingSynchronizer synchronizer = new RecordingSynchronizer();
+        OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
+
+        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+            assertFalse(connection
+                    .createStatement()
+                    .execute("alter view \"Active Employees\" rename to \"Enabled Employees\""));
+
+            try (ResultSet resultSet = connection
+                    .createStatement()
+                    .executeQuery("select \"Name\" from \"Enabled Employees\" order by \"Name\"")) {
+                assertTrue(resultSet.next());
+                assertEquals("Alice", resultSet.getString(1));
+                assertTrue(resultSet.next());
+                assertEquals("Carol", resultSet.getString(1));
+                assertFalse(resultSet.next());
+            }
+        }
+
+        assertEquals(List.of("Active Employees->Enabled Employees"), synchronizer.updatedFilterViews);
+    }
+
+    @Test
+    void alterViewAsReplacesFilterViewDefinitionInSynchronizer() throws Exception {
+        RecordingSynchronizer synchronizer = new RecordingSynchronizer();
+        OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
+
+        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+            assertFalse(connection.createStatement().execute("""
+                    alter view "Active Employees" as
+                    select "Name"
+                    from "Employees"
+                    where "Name" = 'Bob'
+                    """));
+
+            try (ResultSet resultSet = connection
+                    .createStatement()
+                    .executeQuery("select \"Name\" from \"Active Employees\" order by \"Name\"")) {
+                assertTrue(resultSet.next());
+                assertEquals("Bob", resultSet.getString(1));
+                assertFalse(resultSet.next());
+            }
+        }
+
+        assertEquals(List.of("Active Employees->Active Employees"), synchronizer.updatedFilterViews);
+        assertEquals(
+                List.of(new FilterCriterion(0, List.of(), "TEXT_EQ", List.of("Bob"))),
+                synchronizer.updatedFilterViewDefinitions.getFirst().criteria());
+    }
+
     private static SpreadsheetSnapshot workbook() {
         WorksheetSnapshot employees = new WorksheetSnapshot(
                 101,
@@ -297,6 +392,11 @@ class OrriDriverTest {
         return new SpreadsheetSnapshot(List.of(employees), List.of(activeEmployees));
     }
 
+    private static SpreadsheetSnapshot workbookWithoutViews() {
+        WorksheetSnapshot employees = workbook().worksheets().getFirst();
+        return new SpreadsheetSnapshot(List.of(employees), List.of());
+    }
+
     private static Properties properties(String... values) {
         Properties properties = new Properties();
         for (int index = 0; index < values.length; index += 2) {
@@ -334,6 +434,22 @@ class OrriDriverTest {
 
             @Override
             public void deleteFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) {}
+
+            @Override
+            public WorksheetSnapshot renameWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, String newName) {
+                return new WorksheetSnapshot(
+                        worksheet.sheetId(),
+                        newName,
+                        worksheet.columnNames(),
+                        worksheet.columnTypes(),
+                        worksheet.rows());
+            }
+
+            @Override
+            public FilterViewDefinition updateFilterView(
+                    OrriJdbcUrl url, FilterViewDefinition existingFilterView, FilterViewDefinition updatedFilterView) {
+                return updatedFilterView;
+            }
         };
     }
 
@@ -344,6 +460,9 @@ class OrriDriverTest {
         private final List<FilterViewDefinition> createdFilterViewDefinitions = new ArrayList<>();
         private final List<String> deletedWorksheets = new ArrayList<>();
         private final List<String> deletedFilterViews = new ArrayList<>();
+        private final List<String> renamedWorksheets = new ArrayList<>();
+        private final List<String> updatedFilterViews = new ArrayList<>();
+        private final List<FilterViewDefinition> updatedFilterViewDefinitions = new ArrayList<>();
 
         @Override
         public void syncWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {
@@ -385,6 +504,30 @@ class OrriDriverTest {
         @Override
         public void deleteFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) {
             deletedFilterViews.add(filterView.name());
+        }
+
+        @Override
+        public WorksheetSnapshot renameWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, String newName) {
+            renamedWorksheets.add(worksheet.name() + "->" + newName);
+            return new WorksheetSnapshot(
+                    worksheet.sheetId(), newName, worksheet.columnNames(), worksheet.columnTypes(), worksheet.rows());
+        }
+
+        @Override
+        public FilterViewDefinition updateFilterView(
+                OrriJdbcUrl url, FilterViewDefinition existingFilterView, FilterViewDefinition updatedFilterView) {
+            updatedFilterViews.add(existingFilterView.name() + "->" + updatedFilterView.name());
+            updatedFilterViewDefinitions.add(updatedFilterView);
+            return new FilterViewDefinition(
+                    existingFilterView.filterViewId(),
+                    updatedFilterView.name(),
+                    updatedFilterView.sourceSheetId(),
+                    updatedFilterView.startRowIndex(),
+                    updatedFilterView.endRowIndex(),
+                    updatedFilterView.startColumnIndex(),
+                    updatedFilterView.endColumnIndex(),
+                    updatedFilterView.criteria(),
+                    updatedFilterView.sortKeys());
         }
     }
 }

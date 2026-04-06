@@ -22,6 +22,8 @@ import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.SortSpec;
+import com.google.api.services.sheets.v4.model.UpdateFilterViewRequest;
+import com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -157,6 +159,70 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
                     .execute();
         } catch (IOException exception) {
             throw new SQLException("Failed to delete filter view " + filterView.name(), exception);
+        }
+    }
+
+    @Override
+    public WorksheetSnapshot renameWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, String newName)
+            throws SQLException {
+        try {
+            Sheets sheets = buildSheetsClient(url);
+            Request request = new Request()
+                    .setUpdateSheetProperties(new UpdateSheetPropertiesRequest()
+                            .setProperties(new SheetProperties()
+                                    .setSheetId(worksheet.sheetId())
+                                    .setTitle(newName))
+                            .setFields("title"));
+            sheets.spreadsheets()
+                    .batchUpdate(url.spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
+                    .execute();
+            return new WorksheetSnapshot(
+                    worksheet.sheetId(), newName, worksheet.columnNames(), worksheet.columnTypes(), worksheet.rows());
+        } catch (IOException exception) {
+            throw new SQLException("Failed to rename worksheet " + worksheet.name() + " to " + newName, exception);
+        }
+    }
+
+    @Override
+    public FilterViewDefinition updateFilterView(
+            OrriJdbcUrl url, FilterViewDefinition existingFilterView, FilterViewDefinition updatedFilterView)
+            throws SQLException {
+        if (existingFilterView.filterViewId() == null) {
+            throw new SQLException(
+                    "Cannot update filter view " + existingFilterView.name() + " without a filter view id");
+        }
+        try {
+            Sheets sheets = buildSheetsClient(url);
+            FilterView googleFilterView = new FilterView()
+                    .setFilterViewId(existingFilterView.filterViewId())
+                    .setTitle(updatedFilterView.name())
+                    .setRange(new GridRange()
+                            .setSheetId(updatedFilterView.sourceSheetId())
+                            .setStartRowIndex(updatedFilterView.startRowIndex())
+                            .setEndRowIndex(updatedFilterView.endRowIndex())
+                            .setStartColumnIndex(updatedFilterView.startColumnIndex())
+                            .setEndColumnIndex(updatedFilterView.endColumnIndex()))
+                    .setCriteria(toCriteria(updatedFilterView.criteria()))
+                    .setSortSpecs(toSortSpecs(updatedFilterView.sortKeys()));
+            Request request = new Request()
+                    .setUpdateFilterView(new UpdateFilterViewRequest()
+                            .setFilter(googleFilterView)
+                            .setFields("title,range,criteria,sortSpecs"));
+            sheets.spreadsheets()
+                    .batchUpdate(url.spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
+                    .execute();
+            return new FilterViewDefinition(
+                    existingFilterView.filterViewId(),
+                    updatedFilterView.name(),
+                    updatedFilterView.sourceSheetId(),
+                    updatedFilterView.startRowIndex(),
+                    updatedFilterView.endRowIndex(),
+                    updatedFilterView.startColumnIndex(),
+                    updatedFilterView.endColumnIndex(),
+                    updatedFilterView.criteria(),
+                    updatedFilterView.sortKeys());
+        } catch (IOException exception) {
+            throw new SQLException("Failed to update filter view " + existingFilterView.name(), exception);
         }
     }
 

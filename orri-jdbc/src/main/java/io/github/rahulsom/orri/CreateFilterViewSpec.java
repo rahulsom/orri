@@ -74,6 +74,19 @@ record CreateFilterViewSpec(
                 sortKeys);
     }
 
+    FilterViewDefinition toFilterViewDefinition(FilterViewDefinition existingFilterView) {
+        return new FilterViewDefinition(
+                existingFilterView.filterViewId(),
+                viewName,
+                sourceWorksheet.sheetId(),
+                0,
+                null,
+                startColumnIndex,
+                endColumnIndex,
+                criteria,
+                sortKeys);
+    }
+
     private static List<String> parseSelectedColumns(String selectClause, WorksheetSnapshot sourceWorksheet)
             throws SQLException {
         String trimmed = selectClause.trim();

@@ -281,6 +281,22 @@ class DocumentationSamplesTest {
 
             @Override
             public void deleteFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) {}
+
+            @Override
+            public WorksheetSnapshot renameWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, String newName) {
+                return new WorksheetSnapshot(
+                        worksheet.sheetId(),
+                        newName,
+                        worksheet.columnNames(),
+                        worksheet.columnTypes(),
+                        worksheet.rows());
+            }
+
+            @Override
+            public FilterViewDefinition updateFilterView(
+                    OrriJdbcUrl url, FilterViewDefinition existingFilterView, FilterViewDefinition updatedFilterView) {
+                return updatedFilterView;
+            }
         });
     }
 
