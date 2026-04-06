@@ -17,4 +17,10 @@ interface SpreadsheetSynchronizer {
     void deleteWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet) throws SQLException;
 
     void deleteFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) throws SQLException;
+
+    WorksheetSnapshot renameWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, String newName) throws SQLException;
+
+    FilterViewDefinition updateFilterView(
+            OrriJdbcUrl url, FilterViewDefinition existingFilterView, FilterViewDefinition updatedFilterView)
+            throws SQLException;
 }

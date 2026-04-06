@@ -99,15 +99,21 @@ final class OrriJdbcProxy {
             CreateFilterViewSpec createFilterView =
                     sql == null ? null : CreateFilterViewSpec.parse(sql, session.snapshot());
             DropRelationSpec dropRelation = sql == null ? null : DropRelationSpec.parse(sql);
-            validate(mutation, createTable, createFilterView, dropRelation, sql);
+            AlterTableSpec alterTable = sql == null ? null : AlterTableSpec.parse(sql);
+            AlterViewSpec alterView = sql == null ? null : AlterViewSpec.parse(sql, session.snapshot());
+            validate(mutation, createTable, createFilterView, dropRelation, alterTable, alterView, sql);
 
             if (dropRelation != null) {
                 return dropRelation(method.getName(), dropRelation);
             }
 
+            if (alterView != null) {
+                return alterView(method.getName(), alterView);
+            }
+
             try {
                 Object result = method.invoke(delegate, args);
-                synchronize(method.getName(), mutation, createTable, createFilterView);
+                synchronize(method.getName(), mutation, createTable, createFilterView, alterTable);
                 return result;
             } catch (InvocationTargetException exception) {
                 throw exception.getCause();
@@ -129,10 +135,16 @@ final class OrriJdbcProxy {
                 CreateTableSpec createTable,
                 CreateFilterViewSpec createFilterView,
                 DropRelationSpec dropRelation,
+                AlterTableSpec alterTable,
+                AlterViewSpec alterView,
                 String sql)
                 throws SQLException {
-            boolean schemaOrDataMutation =
-                    mutation != null || createTable != null || createFilterView != null || dropRelation != null;
+            boolean schemaOrDataMutation = mutation != null
+                    || createTable != null
+                    || createFilterView != null
+                    || dropRelation != null
+                    || alterTable != null
+                    || alterView != null;
             if (!schemaOrDataMutation) {
                 return;
             }
@@ -147,6 +159,16 @@ final class OrriJdbcProxy {
                     && sql.trim().toLowerCase().startsWith("create view")) {
                 throw new SQLFeatureNotSupportedException(
                         "CREATE VIEW only supports simple SELECT statements over a single worksheet");
+            }
+
+            if (alterTable == null && sql != null && sql.trim().toLowerCase().startsWith("alter table")) {
+                throw new SQLFeatureNotSupportedException(
+                        "ALTER TABLE supports RENAME TO, ADD COLUMN, DROP COLUMN, and ALTER COLUMN ... RENAME TO");
+            }
+
+            if (alterView == null && sql != null && sql.trim().toLowerCase().startsWith("alter view")) {
+                throw new SQLFeatureNotSupportedException(
+                        "ALTER VIEW supports RENAME TO and AS SELECT over a single worksheet");
             }
 
             if (dropRelation != null) {
@@ -166,6 +188,23 @@ final class OrriJdbcProxy {
                 }
             }
 
+            if (alterTable != null) {
+                if (session.snapshot().worksheet(alterTable.relationName()) == null) {
+                    throw new SQLFeatureNotSupportedException("ALTER TABLE is only supported for worksheet tables");
+                }
+                if (alterTable.type() == AlterTableSpec.Type.DROP_COLUMN
+                        && !session.snapshot()
+                                .filterViewsForWorksheet(alterTable.relationName())
+                                .isEmpty()) {
+                    throw new SQLFeatureNotSupportedException(
+                            "ALTER TABLE ... DROP COLUMN is not supported for worksheets with dependent views");
+                }
+            }
+
+            if (alterView != null && session.filterView(alterView.viewName()) == null) {
+                throw new SQLFeatureNotSupportedException("ALTER VIEW is only supported for Google Sheets views");
+            }
+
             if (mutation != null) {
                 if (session.snapshot().viewNames().contains(mutation.relationName())) {
                     throw new SQLFeatureNotSupportedException("DML against filter views is not supported");
@@ -180,6 +219,18 @@ final class OrriJdbcProxy {
             return switch (dropRelation.type()) {
                 case TABLE -> dropTable(methodName, dropRelation.relationName());
                 case VIEW -> dropView(methodName, dropRelation.relationName());
+            };
+        }
+
+        private Object alterView(String methodName, AlterViewSpec alterView) throws SQLException {
+            FilterViewDefinition existingFilterView = session.filterView(alterView.viewName());
+            if (existingFilterView == null) {
+                throw new SQLFeatureNotSupportedException("ALTER VIEW is only supported for Google Sheets views");
+            }
+
+            return switch (alterView.type()) {
+                case RENAME_VIEW -> renameView(methodName, alterView, existingFilterView);
+                case REPLACE_VIEW -> replaceView(methodName, alterView, existingFilterView);
             };
         }
 
@@ -214,6 +265,42 @@ final class OrriJdbcProxy {
             return methodResult(methodName);
         }
 
+        private Object renameView(String methodName, AlterViewSpec alterView, FilterViewDefinition existingFilterView)
+                throws SQLException {
+            renameLocalRelation(alterView.viewName(), alterView.targetName());
+            FilterViewDefinition updatedFilterView = session.synchronizer()
+                    .updateFilterView(
+                            session.url(),
+                            existingFilterView,
+                            new FilterViewDefinition(
+                                    existingFilterView.filterViewId(),
+                                    alterView.targetName(),
+                                    existingFilterView.sourceSheetId(),
+                                    existingFilterView.startRowIndex(),
+                                    existingFilterView.endRowIndex(),
+                                    existingFilterView.startColumnIndex(),
+                                    existingFilterView.endColumnIndex(),
+                                    existingFilterView.criteria(),
+                                    existingFilterView.sortKeys()));
+            session.replaceFilterView(alterView.viewName(), updatedFilterView);
+            return methodResult(methodName);
+        }
+
+        private Object replaceView(String methodName, AlterViewSpec alterView, FilterViewDefinition existingFilterView)
+                throws SQLException {
+            dropLocalRelation(alterView.viewName(), true);
+            try (Statement statement = session.connection().createStatement()) {
+                statement.execute(alterView.createSql());
+            }
+            FilterViewDefinition updatedFilterView = session.synchronizer()
+                    .updateFilterView(
+                            session.url(),
+                            existingFilterView,
+                            alterView.replacementSpec().toFilterViewDefinition(existingFilterView));
+            session.replaceFilterView(alterView.viewName(), updatedFilterView);
+            return methodResult(methodName);
+        }
+
         private void dropLocalRelation(String relationName, boolean preferView) throws SQLException {
             SQLException lastException;
             String firstStatement =
@@ -236,6 +323,28 @@ final class OrriJdbcProxy {
             }
         }
 
+        private void renameLocalRelation(String relationName, String newName) throws SQLException {
+            String relationType = relationType(relationName);
+            String alterStatement = "VIEW".equalsIgnoreCase(relationType)
+                    ? "alter view " + quote(relationName) + " rename to " + quote(newName)
+                    : "alter table " + quote(relationName) + " rename to " + quote(newName);
+            try (Statement statement = session.connection().createStatement()) {
+                statement.execute(alterStatement);
+            }
+        }
+
+        private String relationType(String relationName) throws SQLException {
+            try (ResultSet tables = session.connection().getMetaData().getTables(null, null, relationName, null)) {
+                while (tables.next()) {
+                    String schemaName = tables.getString("TABLE_SCHEM");
+                    if (!"INFORMATION_SCHEMA".equalsIgnoreCase(schemaName)) {
+                        return tables.getString("TABLE_TYPE");
+                    }
+                }
+            }
+            return null;
+        }
+
         private Object methodResult(String methodName) {
             return switch (methodName) {
                 case "executeLargeUpdate" -> 0L;
@@ -248,7 +357,8 @@ final class OrriJdbcProxy {
                 String methodName,
                 SqlMutation mutation,
                 CreateTableSpec createTable,
-                CreateFilterViewSpec createFilterView)
+                CreateFilterViewSpec createFilterView,
+                AlterTableSpec alterTable)
                 throws SQLException {
             if (!methodName.startsWith("execute")) {
                 return;
@@ -270,6 +380,11 @@ final class OrriJdbcProxy {
                 return;
             }
 
+            if (alterTable != null) {
+                synchronizeAlterTable(alterTable);
+                return;
+            }
+
             if (mutation == null) {
                 return;
             }
@@ -282,6 +397,28 @@ final class OrriJdbcProxy {
             if (updateCount > 0) {
                 session.syncWorksheet(mutation.relationName());
             }
+        }
+
+        private void synchronizeAlterTable(AlterTableSpec alterTable) throws SQLException {
+            WorksheetSnapshot currentWorksheet = session.snapshot().worksheet(alterTable.relationName());
+            if (currentWorksheet == null) {
+                throw new SQLFeatureNotSupportedException("ALTER TABLE is only supported for worksheet tables");
+            }
+
+            if (alterTable.type() == AlterTableSpec.Type.RENAME_TABLE) {
+                WorksheetSnapshot renamedWorksheet = session.synchronizer()
+                        .renameWorksheet(session.url(), currentWorksheet, alterTable.targetName());
+                WorksheetSnapshot localWorksheet = OrriDatabase.readWorksheetSnapshot(
+                        session.connection(), alterTable.targetName(), renamedWorksheet.sheetId());
+                session.replaceWorksheet(alterTable.relationName(), localWorksheet);
+                return;
+            }
+
+            WorksheetSnapshot updatedWorksheet = OrriDatabase.readWorksheetSnapshot(
+                    session.connection(), alterTable.relationName(), currentWorksheet.sheetId());
+            session.synchronizer().syncWorksheet(session.url(), updatedWorksheet, session.connection());
+            session.replaceWorksheet(alterTable.relationName(), updatedWorksheet);
+            OrriDatabase.refreshFilterViews(session.connection(), session.snapshot(), alterTable.relationName());
         }
     }
 

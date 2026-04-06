@@ -54,8 +54,24 @@ final class OrriSession {
         snapshot = new SpreadsheetSnapshot(List.copyOf(worksheets), snapshot.filterViews());
     }
 
+    synchronized void replaceWorksheet(String worksheetName, WorksheetSnapshot worksheet) {
+        List<WorksheetSnapshot> worksheets = snapshot.worksheets().stream()
+                .filter(currentWorksheet -> !currentWorksheet.name().equals(worksheetName))
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        worksheets.add(worksheet);
+        snapshot = new SpreadsheetSnapshot(List.copyOf(worksheets), snapshot.filterViews());
+    }
+
     synchronized void registerFilterView(FilterViewDefinition filterView) {
         List<FilterViewDefinition> filterViews = new ArrayList<>(snapshot.filterViews());
+        filterViews.add(filterView);
+        snapshot = new SpreadsheetSnapshot(snapshot.worksheets(), List.copyOf(filterViews));
+    }
+
+    synchronized void replaceFilterView(String viewName, FilterViewDefinition filterView) {
+        List<FilterViewDefinition> filterViews = snapshot.filterViews().stream()
+                .filter(currentFilterView -> !currentFilterView.name().equals(viewName))
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
         filterViews.add(filterView);
         snapshot = new SpreadsheetSnapshot(snapshot.worksheets(), List.copyOf(filterViews));
     }
