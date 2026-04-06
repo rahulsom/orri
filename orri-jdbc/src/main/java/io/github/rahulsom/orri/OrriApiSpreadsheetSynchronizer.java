@@ -25,7 +25,6 @@ import com.google.api.services.sheets.v4.model.SortSpec;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,19 +67,23 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
     }
 
     @Override
-    public WorksheetSnapshot createWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) throws SQLException {
+    public WorksheetSnapshot createWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection)
+            throws SQLException {
         try {
             Sheets sheets = buildSheetsClient(url);
             Request request = new Request()
                     .setAddSheet(new AddSheetRequest().setProperties(new SheetProperties().setTitle(worksheet.name())));
             BatchUpdateSpreadsheetResponse response = sheets.spreadsheets()
-                    .batchUpdate(
-                            url.spreadsheetId(),
-                            new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
+                    .batchUpdate(url.spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
                     .execute();
 
-            Integer sheetId = response.getReplies().getFirst().getAddSheet().getProperties().getSheetId();
-            WorksheetSnapshot createdWorksheet = OrriDatabase.readWorksheetSnapshot(connection, worksheet.name(), sheetId);
+            Integer sheetId = response.getReplies()
+                    .getFirst()
+                    .getAddSheet()
+                    .getProperties()
+                    .getSheetId();
+            WorksheetSnapshot createdWorksheet =
+                    OrriDatabase.readWorksheetSnapshot(connection, worksheet.name(), sheetId);
             syncWorksheet(url, createdWorksheet, connection);
             return createdWorksheet;
         } catch (IOException exception) {
@@ -103,14 +106,15 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
                     .setCriteria(toCriteria(filterView.criteria()))
                     .setSortSpecs(toSortSpecs(filterView.sortKeys()));
 
-            Request request = new Request()
-                    .setAddFilterView(new AddFilterViewRequest().setFilter(googleFilterView));
+            Request request = new Request().setAddFilterView(new AddFilterViewRequest().setFilter(googleFilterView));
             BatchUpdateSpreadsheetResponse response = sheets.spreadsheets()
-                    .batchUpdate(
-                            url.spreadsheetId(),
-                            new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
+                    .batchUpdate(url.spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
                     .execute();
-            Integer filterViewId = response.getReplies().getFirst().getAddFilterView().getFilter().getFilterViewId();
+            Integer filterViewId = response.getReplies()
+                    .getFirst()
+                    .getAddFilterView()
+                    .getFilter()
+                    .getFilterViewId();
             return new FilterViewDefinition(
                     filterViewId,
                     filterView.name(),
@@ -130,12 +134,9 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
     public void deleteWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet) throws SQLException {
         try {
             Sheets sheets = buildSheetsClient(url);
-            Request request = new Request()
-                    .setDeleteSheet(new DeleteSheetRequest().setSheetId(worksheet.sheetId()));
+            Request request = new Request().setDeleteSheet(new DeleteSheetRequest().setSheetId(worksheet.sheetId()));
             sheets.spreadsheets()
-                    .batchUpdate(
-                            url.spreadsheetId(),
-                            new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
+                    .batchUpdate(url.spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
                     .execute();
         } catch (IOException exception) {
             throw new SQLException("Failed to delete worksheet " + worksheet.name(), exception);
@@ -152,9 +153,7 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
             Request request = new Request()
                     .setDeleteFilterView(new DeleteFilterViewRequest().setFilterId(filterView.filterViewId()));
             sheets.spreadsheets()
-                    .batchUpdate(
-                            url.spreadsheetId(),
-                            new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
+                    .batchUpdate(url.spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
                     .execute();
         } catch (IOException exception) {
             throw new SQLException("Failed to delete filter view " + filterView.name(), exception);
@@ -177,8 +176,8 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
         String credentialsJson = url.property("credentialsJson");
         if (credentialsJson != null && !credentialsJson.isBlank()) {
             try (InputStream inputStream = new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8))) {
-                GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream)
-                        .createScoped(SheetsScopes.SPREADSHEETS);
+                GoogleCredentials credentials =
+                        GoogleCredentials.fromStream(inputStream).createScoped(SheetsScopes.SPREADSHEETS);
                 return new HttpCredentialsAdapter(credentials);
             }
         }
@@ -186,8 +185,8 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
         String credentialsFile = url.property("credentialsFile");
         if (credentialsFile != null && !credentialsFile.isBlank()) {
             try (InputStream inputStream = java.nio.file.Files.newInputStream(java.nio.file.Path.of(credentialsFile))) {
-                GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream)
-                        .createScoped(SheetsScopes.SPREADSHEETS);
+                GoogleCredentials credentials =
+                        GoogleCredentials.fromStream(inputStream).createScoped(SheetsScopes.SPREADSHEETS);
                 return new HttpCredentialsAdapter(credentials);
             }
         }
@@ -196,8 +195,8 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
             throw new SQLException("Writable connections require OAuth credentials or a service account");
         }
 
-        GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
-                .createScoped(SheetsScopes.SPREADSHEETS);
+        GoogleCredentials credentials =
+                GoogleCredentials.getApplicationDefault().createScoped(SheetsScopes.SPREADSHEETS);
         return new HttpCredentialsAdapter(credentials);
     }
 
@@ -205,13 +204,14 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
         request.getHeaders().setAuthorization("Bearer " + accessToken);
     }
 
-    private List<List<Object>> loadWorksheetValues(Connection connection, WorksheetSnapshot worksheet) throws SQLException {
+    private List<List<Object>> loadWorksheetValues(Connection connection, WorksheetSnapshot worksheet)
+            throws SQLException {
         List<List<Object>> values = new ArrayList<>();
         values.add(new ArrayList<>(worksheet.columnNames()));
 
         String sql = "select " + selectColumns(worksheet.columnNames()) + " from " + quoteIdentifier(worksheet.name());
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+                ResultSet resultSet = statement.executeQuery(sql)) {
             while (resultSet.next()) {
                 List<Object> row = new ArrayList<>(worksheet.columnNames().size());
                 for (int columnIndex = 0; columnIndex < worksheet.columnNames().size(); columnIndex++) {

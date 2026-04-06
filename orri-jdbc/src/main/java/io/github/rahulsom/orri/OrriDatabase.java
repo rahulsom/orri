@@ -20,8 +20,7 @@ import java.util.UUID;
  * Materializes worksheet tables and filter views into an in-memory H2 database.
  */
 final class OrriDatabase {
-    private OrriDatabase() {
-    }
+    private OrriDatabase() {}
 
     static Connection materialize(SpreadsheetSnapshot snapshot, boolean readOnly) throws SQLException {
         Connection connection = DriverManager.getConnection(
@@ -46,7 +45,8 @@ final class OrriDatabase {
         return connection;
     }
 
-    static WorksheetSnapshot readWorksheetSnapshot(Connection connection, String relationName, Integer sheetId) throws SQLException {
+    static WorksheetSnapshot readWorksheetSnapshot(Connection connection, String relationName, Integer sheetId)
+            throws SQLException {
         DatabaseMetaData metaData = connection.getMetaData();
         List<String> columnNames = new ArrayList<>();
         List<ColumnType> columnTypes = new ArrayList<>();
@@ -65,7 +65,7 @@ final class OrriDatabase {
         List<WorksheetRow> rows = new ArrayList<>();
         String sql = "select " + selectColumns(columnNames) + " from " + quote(relationName);
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+                ResultSet resultSet = statement.executeQuery(sql)) {
             int rowIndex = 1;
             while (resultSet.next()) {
                 List<CellValue> cells = new ArrayList<>(columnNames.size());
@@ -85,7 +85,8 @@ final class OrriDatabase {
                 List.copyOf(rows));
     }
 
-    static void refreshFilterViews(Connection connection, SpreadsheetSnapshot snapshot, String worksheetName) throws SQLException {
+    static void refreshFilterViews(Connection connection, SpreadsheetSnapshot snapshot, String worksheetName)
+            throws SQLException {
         for (FilterViewDefinition filterView : snapshot.filterViewsForWorksheet(worksheetName)) {
             String relationType = relationType(connection, filterView.name());
             if ("VIEW".equalsIgnoreCase(relationType)) {
@@ -112,14 +113,13 @@ final class OrriDatabase {
     }
 
     private static SpreadsheetSnapshot refreshedSnapshot(
-            Connection connection,
-            SpreadsheetSnapshot snapshot,
-            String worksheetName) throws SQLException {
+            Connection connection, SpreadsheetSnapshot snapshot, String worksheetName) throws SQLException {
         WorksheetSnapshot originalWorksheet = snapshot.worksheet(worksheetName);
         if (originalWorksheet == null) {
             throw new SQLException("Unknown worksheet " + worksheetName);
         }
-        WorksheetSnapshot currentWorksheet = readWorksheetSnapshot(connection, worksheetName, originalWorksheet.sheetId());
+        WorksheetSnapshot currentWorksheet =
+                readWorksheetSnapshot(connection, worksheetName, originalWorksheet.sheetId());
         return new SpreadsheetSnapshot(List.of(currentWorksheet), List.of());
     }
 
@@ -136,16 +136,20 @@ final class OrriDatabase {
     }
 
     private static String selectColumns(List<String> columnNames) {
-        return columnNames.stream()
-                .map(OrriDatabase::quote)
-                .collect(java.util.stream.Collectors.joining(", "));
+        return columnNames.stream().map(OrriDatabase::quote).collect(java.util.stream.Collectors.joining(", "));
     }
 
     private static ColumnType columnType(int jdbcType) {
         return switch (jdbcType) {
             case java.sql.Types.BOOLEAN, java.sql.Types.BIT -> ColumnType.BOOLEAN;
-            case java.sql.Types.DECIMAL, java.sql.Types.NUMERIC, java.sql.Types.INTEGER, java.sql.Types.BIGINT,
-                    java.sql.Types.SMALLINT, java.sql.Types.FLOAT, java.sql.Types.DOUBLE, java.sql.Types.REAL -> ColumnType.DECIMAL;
+            case java.sql.Types.DECIMAL,
+                    java.sql.Types.NUMERIC,
+                    java.sql.Types.INTEGER,
+                    java.sql.Types.BIGINT,
+                    java.sql.Types.SMALLINT,
+                    java.sql.Types.FLOAT,
+                    java.sql.Types.DOUBLE,
+                    java.sql.Types.REAL -> ColumnType.DECIMAL;
             default -> ColumnType.VARCHAR;
         };
     }
@@ -158,9 +162,7 @@ final class OrriDatabase {
     }
 
     private static void createFilterViewTable(
-            Connection connection,
-            SpreadsheetSnapshot snapshot,
-            FilterViewDefinition filterView) throws SQLException {
+            Connection connection, SpreadsheetSnapshot snapshot, FilterViewDefinition filterView) throws SQLException {
         WorksheetSnapshot sourceWorksheet = snapshot.worksheets().stream()
                 .filter(worksheet -> worksheet.sheetId() == filterView.sourceSheetId())
                 .findFirst()
@@ -169,7 +171,9 @@ final class OrriDatabase {
         int startColumnIndex = Math.max(0, filterView.startColumnIndex());
         int endColumnIndex = filterView.endColumnIndex() == null
                 ? sourceWorksheet.columnNames().size()
-                : Math.min(filterView.endColumnIndex(), sourceWorksheet.columnNames().size());
+                : Math.min(
+                        filterView.endColumnIndex(),
+                        sourceWorksheet.columnNames().size());
         if (startColumnIndex >= endColumnIndex) {
             throw new SQLException("Filter view " + filterView.name() + " does not expose any columns");
         }
@@ -180,8 +184,10 @@ final class OrriDatabase {
                 .sorted(comparator(filterView))
                 .toList();
 
-        List<String> columnNames = new ArrayList<>(sourceWorksheet.columnNames().subList(startColumnIndex, endColumnIndex));
-        List<ColumnType> columnTypes = new ArrayList<>(sourceWorksheet.columnTypes().subList(startColumnIndex, endColumnIndex));
+        List<String> columnNames =
+                new ArrayList<>(sourceWorksheet.columnNames().subList(startColumnIndex, endColumnIndex));
+        List<ColumnType> columnTypes =
+                new ArrayList<>(sourceWorksheet.columnTypes().subList(startColumnIndex, endColumnIndex));
         List<List<Object>> rows = filteredRows.stream()
                 .map(row -> {
                     List<Object> values = coerceRow(row, sourceWorksheet.columnTypes());
@@ -230,15 +236,17 @@ final class OrriDatabase {
             case "TEXT_ENDS_WITH" -> anyValueMatches(criterion.conditionValues(), displayValue::endsWith);
             case "TEXT_IS_EMAIL" -> displayValue.contains("@");
             case "TEXT_IS_URL" -> //noinspection HttpUrlsUsage
-                    displayValue.startsWith("http://") || displayValue.startsWith("https://");
-            case "BOOLEAN" -> anyValueMatches(
-                    criterion.conditionValues(),
-                    candidate -> Boolean.parseBoolean(candidate) == asBoolean(cell));
+                displayValue.startsWith("http://") || displayValue.startsWith("https://");
+            case "BOOLEAN" ->
+                anyValueMatches(
+                        criterion.conditionValues(), candidate -> Boolean.parseBoolean(candidate) == asBoolean(cell));
             case "NUMBER_EQ" -> compareNumbers(cell, criterion.conditionValues(), comparisonType.EXACT);
             case "NUMBER_GREATER" -> compareNumbers(cell, criterion.conditionValues(), comparisonType.GREATER_THAN);
-            case "NUMBER_GREATER_THAN_EQ" -> compareNumbers(cell, criterion.conditionValues(), comparisonType.GREATER_THAN_OR_EQUAL);
+            case "NUMBER_GREATER_THAN_EQ" ->
+                compareNumbers(cell, criterion.conditionValues(), comparisonType.GREATER_THAN_OR_EQUAL);
             case "NUMBER_LESS" -> compareNumbers(cell, criterion.conditionValues(), comparisonType.LESS_THAN);
-            case "NUMBER_LESS_THAN_EQ" -> compareNumbers(cell, criterion.conditionValues(), comparisonType.LESS_THAN_OR_EQUAL);
+            case "NUMBER_LESS_THAN_EQ" ->
+                compareNumbers(cell, criterion.conditionValues(), comparisonType.LESS_THAN_OR_EQUAL);
             case "NUMBER_BETWEEN" -> compareNumberRange(cell, criterion.conditionValues(), true);
             case "NUMBER_NOT_BETWEEN" -> compareNumberRange(cell, criterion.conditionValues(), false);
             default -> true;
@@ -293,8 +301,7 @@ final class OrriDatabase {
         Comparator<WorksheetRow> comparator = Comparator.comparingInt(WorksheetRow::sheetRowIndex);
         for (SortKey sortKey : filterView.sortKeys()) {
             Comparator<WorksheetRow> nextComparator = Comparator.comparing(
-                    row -> sortableValue(row, sortKey.columnIndex()),
-                    OrriDatabase::compareSortValues);
+                    row -> sortableValue(row, sortKey.columnIndex()), OrriDatabase::compareSortValues);
             if (sortKey.descending()) {
                 nextComparator = nextComparator.reversed();
             }
@@ -380,7 +387,8 @@ final class OrriDatabase {
             String relationName,
             List<String> columnNames,
             List<ColumnType> columnTypes,
-            List<List<Object>> rows) throws SQLException {
+            List<List<Object>> rows)
+            throws SQLException {
         if (columnNames.isEmpty()) {
             throw new SQLException("Relation " + relationName + " does not contain any columns");
         }
@@ -406,10 +414,12 @@ final class OrriDatabase {
         }
     }
 
-    private static String buildCreateTableSql(String relationName, List<String> columnNames, List<ColumnType> columnTypes) {
+    private static String buildCreateTableSql(
+            String relationName, List<String> columnNames, List<ColumnType> columnTypes) {
         List<String> definitions = new ArrayList<>(columnNames.size());
         for (int index = 0; index < columnNames.size(); index++) {
-            definitions.add(quote(columnNames.get(index)) + " " + columnTypes.get(index).ddlType());
+            definitions.add(
+                    quote(columnNames.get(index)) + " " + columnTypes.get(index).ddlType());
         }
         return "CREATE TABLE " + quote(relationName) + " (" + String.join(", ", definitions) + ")";
     }

@@ -5,6 +5,7 @@ google-oauth-client = "1.39.0"
 google-sheets = "v4-rev20260213-2.0.0"
 h2 = "2.4.240"
 junit = "6.0.1"
+spotless = "8.3.0"
 waena = "0.24.0"
 
 [libraries]
@@ -15,5 +16,6 @@ google-sheets = { module = "com.google.apis:google-api-services-sheets", version
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 
 [plugins]
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 waena-published = { id = "com.github.rahulsom.waena.published" }
 waena-root = { id = "com.github.rahulsom.waena.root", version.ref = "waena" }

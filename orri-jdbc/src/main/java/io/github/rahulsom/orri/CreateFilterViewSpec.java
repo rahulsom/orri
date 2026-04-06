@@ -17,17 +17,17 @@ record CreateFilterViewSpec(
         Integer endColumnIndex,
         List<FilterCriterion> criteria,
         List<SortKey> sortKeys) {
-    private static final Pattern CREATE_VIEW_PATTERN = Pattern.compile(
-            "(?is)^\\s*create\\s+view\\s+(?:if\\s+not\\s+exists\\s+)?(?<name>\"(?:[^\"]|\"\")*\"|\\S+)"
+    private static final Pattern CREATE_VIEW_PATTERN =
+            Pattern.compile("(?is)^\\s*create\\s+view\\s+(?:if\\s+not\\s+exists\\s+)?(?<name>\"(?:[^\"]|\"\")*\"|\\S+)"
                     + "\\s+as\\s+select\\s+(?<select>.+?)\\s+from\\s+(?<from>\"(?:[^\"]|\"\")*\"|\\S+)"
                     + "(?:\\s+where\\s+(?<where>.+?))?"
                     + "(?:\\s+order\\s+by\\s+(?<order>.+?))?\\s*$");
-    private static final Pattern COMPARISON_PATTERN = Pattern.compile(
-            "(?is)^\\s*(\"(?:[^\"]|\"\")*\"|[^\\s]+)\\s*(=|>=|<=|>|<)\\s*(.+?)\\s*$");
-    private static final Pattern LIKE_PATTERN = Pattern.compile(
-            "(?is)^\\s*(\"(?:[^\"]|\"\")*\"|[^\\s]+)\\s+like\\s+(.+?)\\s*$");
-    private static final Pattern NULL_PATTERN = Pattern.compile(
-            "(?is)^\\s*(\"(?:[^\"]|\"\")*\"|[^\\s]+)\\s+is\\s+(not\\s+)?null\\s*$");
+    private static final Pattern COMPARISON_PATTERN =
+            Pattern.compile("(?is)^\\s*(\"(?:[^\"]|\"\")*\"|[^\\s]+)\\s*(=|>=|<=|>|<)\\s*(.+?)\\s*$");
+    private static final Pattern LIKE_PATTERN =
+            Pattern.compile("(?is)^\\s*(\"(?:[^\"]|\"\")*\"|[^\\s]+)\\s+like\\s+(.+?)\\s*$");
+    private static final Pattern NULL_PATTERN =
+            Pattern.compile("(?is)^\\s*(\"(?:[^\"]|\"\")*\"|[^\\s]+)\\s+is\\s+(not\\s+)?null\\s*$");
 
     static CreateFilterViewSpec parse(String sql, SpreadsheetSnapshot snapshot) throws SQLException {
         if (sql == null) {
@@ -74,7 +74,8 @@ record CreateFilterViewSpec(
                 sortKeys);
     }
 
-    private static List<String> parseSelectedColumns(String selectClause, WorksheetSnapshot sourceWorksheet) throws SQLException {
+    private static List<String> parseSelectedColumns(String selectClause, WorksheetSnapshot sourceWorksheet)
+            throws SQLException {
         String trimmed = selectClause.trim();
         if ("*".equals(trimmed)) {
             return sourceWorksheet.columnNames();
@@ -109,7 +110,8 @@ record CreateFilterViewSpec(
         return start;
     }
 
-    private static List<FilterCriterion> parseCriteria(String whereClause, WorksheetSnapshot worksheet) throws SQLException {
+    private static List<FilterCriterion> parseCriteria(String whereClause, WorksheetSnapshot worksheet)
+            throws SQLException {
         if (whereClause == null || whereClause.isBlank()) {
             return List.of();
         }
@@ -136,10 +138,12 @@ record CreateFilterViewSpec(
             int columnIndex = columnIndex(worksheet, columnName);
             String value = parseLiteral(likeMatcher.group(2));
             if (value.startsWith("%") && value.endsWith("%") && value.length() >= 2) {
-                return new FilterCriterion(columnIndex, List.of(), "TEXT_CONTAINS", List.of(value.substring(1, value.length() - 1)));
+                return new FilterCriterion(
+                        columnIndex, List.of(), "TEXT_CONTAINS", List.of(value.substring(1, value.length() - 1)));
             }
             if (value.endsWith("%")) {
-                return new FilterCriterion(columnIndex, List.of(), "TEXT_STARTS_WITH", List.of(value.substring(0, value.length() - 1)));
+                return new FilterCriterion(
+                        columnIndex, List.of(), "TEXT_STARTS_WITH", List.of(value.substring(0, value.length() - 1)));
             }
             if (value.startsWith("%")) {
                 return new FilterCriterion(columnIndex, List.of(), "TEXT_ENDS_WITH", List.of(value.substring(1)));

@@ -1,7 +1,5 @@
 package io.github.rahulsom.orri;
 
-import javax.sql.rowset.CachedRowSet;
-import javax.sql.rowset.RowSetProvider;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,19 +14,18 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetProvider;
 
 /**
  * Wraps JDBC objects so metadata reflects Google Sheets semantics.
  */
 final class OrriJdbcProxy {
-    private OrriJdbcProxy() {
-    }
+    private OrriJdbcProxy() {}
 
     static Connection wrap(OrriSession session) {
         return (Connection) Proxy.newProxyInstance(
-                Connection.class.getClassLoader(),
-                new Class[]{Connection.class},
-                new ConnectionHandler(session));
+                Connection.class.getClassLoader(), new Class[] {Connection.class}, new ConnectionHandler(session));
     }
 
     private record ConnectionHandler(OrriSession session) implements InvocationHandler {
@@ -40,7 +37,9 @@ final class OrriJdbcProxy {
                     case "isReadOnly" -> session.readOnly();
                     case "setReadOnly" -> setReadOnly(args);
                     case "createStatement" -> wrapStatement((Statement) method.invoke(session.connection(), args));
-                    case "prepareStatement" -> wrapPreparedStatement((PreparedStatement) method.invoke(session.connection(), args), (String) args[0]);
+                    case "prepareStatement" ->
+                        wrapPreparedStatement(
+                                (PreparedStatement) method.invoke(session.connection(), args), (String) args[0]);
                     case "unwrap" -> unwrap(args[0]);
                     case "isWrapperFor" -> isWrapperFor(args[0]);
                     default -> method.invoke(session.connection(), args);
@@ -63,14 +62,14 @@ final class OrriJdbcProxy {
         private Statement wrapStatement(Statement statement) {
             return (Statement) Proxy.newProxyInstance(
                     Statement.class.getClassLoader(),
-                    new Class[]{Statement.class},
+                    new Class[] {Statement.class},
                     new StatementHandler(session, statement, null));
         }
 
         private PreparedStatement wrapPreparedStatement(PreparedStatement statement, String sql) {
             return (PreparedStatement) Proxy.newProxyInstance(
                     PreparedStatement.class.getClassLoader(),
-                    new Class[]{PreparedStatement.class},
+                    new Class[] {PreparedStatement.class},
                     new StatementHandler(session, statement, sql));
         }
 
@@ -89,17 +88,16 @@ final class OrriJdbcProxy {
         }
     }
 
-    private record StatementHandler(
-            OrriSession session,
-            Object delegate,
-            String preparedSql) implements InvocationHandler {
+    private record StatementHandler(OrriSession session, Object delegate, String preparedSql)
+            implements InvocationHandler {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             String sql = sql(method.getName(), args);
             SqlMutation mutation = sql == null ? null : SqlMutation.parse(sql);
             CreateTableSpec createTable = sql == null ? null : CreateTableSpec.parse(sql);
-            CreateFilterViewSpec createFilterView = sql == null ? null : CreateFilterViewSpec.parse(sql, session.snapshot());
+            CreateFilterViewSpec createFilterView =
+                    sql == null ? null : CreateFilterViewSpec.parse(sql, session.snapshot());
             DropRelationSpec dropRelation = sql == null ? null : DropRelationSpec.parse(sql);
             validate(mutation, createTable, createFilterView, dropRelation, sql);
 
@@ -131,8 +129,10 @@ final class OrriJdbcProxy {
                 CreateTableSpec createTable,
                 CreateFilterViewSpec createFilterView,
                 DropRelationSpec dropRelation,
-                String sql) throws SQLException {
-            boolean schemaOrDataMutation = mutation != null || createTable != null || createFilterView != null || dropRelation != null;
+                String sql)
+                throws SQLException {
+            boolean schemaOrDataMutation =
+                    mutation != null || createTable != null || createFilterView != null || dropRelation != null;
             if (!schemaOrDataMutation) {
                 return;
             }
@@ -142,7 +142,9 @@ final class OrriJdbcProxy {
                         "This connection is read-only. Omit readOnly=true to enable writes.");
             }
 
-            if (createFilterView == null && sql != null && sql.trim().toLowerCase().startsWith("create view")) {
+            if (createFilterView == null
+                    && sql != null
+                    && sql.trim().toLowerCase().startsWith("create view")) {
                 throw new SQLFeatureNotSupportedException(
                         "CREATE VIEW only supports simple SELECT statements over a single worksheet");
             }
@@ -151,12 +153,14 @@ final class OrriJdbcProxy {
                 switch (dropRelation.type()) {
                     case TABLE -> {
                         if (session.snapshot().worksheet(dropRelation.relationName()) == null) {
-                            throw new SQLFeatureNotSupportedException("DROP TABLE is only supported for worksheet tables");
+                            throw new SQLFeatureNotSupportedException(
+                                    "DROP TABLE is only supported for worksheet tables");
                         }
                     }
                     case VIEW -> {
                         if (session.filterView(dropRelation.relationName()) == null) {
-                            throw new SQLFeatureNotSupportedException("DROP VIEW is only supported for Google Sheets views");
+                            throw new SQLFeatureNotSupportedException(
+                                    "DROP VIEW is only supported for Google Sheets views");
                         }
                     }
                 }
@@ -212,8 +216,10 @@ final class OrriJdbcProxy {
 
         private void dropLocalRelation(String relationName, boolean preferView) throws SQLException {
             SQLException lastException;
-            String firstStatement = (preferView ? "drop view if exists " : "drop table if exists ") + quote(relationName);
-            String secondStatement = (preferView ? "drop table if exists " : "drop view if exists ") + quote(relationName);
+            String firstStatement =
+                    (preferView ? "drop view if exists " : "drop table if exists ") + quote(relationName);
+            String secondStatement =
+                    (preferView ? "drop table if exists " : "drop view if exists ") + quote(relationName);
 
             try (Statement statement = session.connection().createStatement()) {
                 statement.execute(firstStatement);
@@ -242,16 +248,17 @@ final class OrriJdbcProxy {
                 String methodName,
                 SqlMutation mutation,
                 CreateTableSpec createTable,
-                CreateFilterViewSpec createFilterView) throws SQLException {
+                CreateFilterViewSpec createFilterView)
+                throws SQLException {
             if (!methodName.startsWith("execute")) {
                 return;
             }
 
             if (createTable != null) {
-                WorksheetSnapshot worksheet = OrriDatabase.readWorksheetSnapshot(
-                        session.connection(), createTable.relationName(), null);
-                WorksheetSnapshot createdWorksheet = session.synchronizer()
-                        .createWorksheet(session.url(), worksheet, session.connection());
+                WorksheetSnapshot worksheet =
+                        OrriDatabase.readWorksheetSnapshot(session.connection(), createTable.relationName(), null);
+                WorksheetSnapshot createdWorksheet =
+                        session.synchronizer().createWorksheet(session.url(), worksheet, session.connection());
                 session.registerWorksheet(createdWorksheet);
                 return;
             }
@@ -267,10 +274,11 @@ final class OrriJdbcProxy {
                 return;
             }
 
-            int updateCount = switch (delegate) {
-                case Statement statement -> statement.getUpdateCount();
-                default -> -1;
-            };
+            int updateCount =
+                    switch (delegate) {
+                        case Statement statement -> statement.getUpdateCount();
+                        default -> -1;
+                    };
             if (updateCount > 0) {
                 session.syncWorksheet(mutation.relationName());
             }
@@ -284,20 +292,21 @@ final class OrriJdbcProxy {
     private static DatabaseMetaData wrapMetaData(DatabaseMetaData delegate, OrriSession session) {
         return (DatabaseMetaData) Proxy.newProxyInstance(
                 DatabaseMetaData.class.getClassLoader(),
-                new Class[]{DatabaseMetaData.class},
+                new Class[] {DatabaseMetaData.class},
                 new MetadataHandler(delegate, session));
     }
 
-    private record MetadataHandler(
-            DatabaseMetaData delegate,
-            OrriSession session) implements InvocationHandler {
+    private record MetadataHandler(DatabaseMetaData delegate, OrriSession session) implements InvocationHandler {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             try {
                 return switch (method.getName()) {
                     case "getURL" -> session.url().originalUrl();
-                    case "getTables" -> rewriteTableTypes((ResultSet) method.invoke(delegate, args), session.snapshot().viewNames());
+                    case "getTables" ->
+                        rewriteTableTypes(
+                                (ResultSet) method.invoke(delegate, args),
+                                session.snapshot().viewNames());
                     case "getTableTypes" -> addViewType((ResultSet) method.invoke(delegate, args));
                     case "unwrap" -> unwrap(args[0]);
                     case "isWrapperFor" -> isWrapperFor(args[0]);

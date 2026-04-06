@@ -9,7 +9,8 @@ import java.sql.SQLException;
 interface SpreadsheetSynchronizer {
     void syncWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) throws SQLException;
 
-    WorksheetSnapshot createWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) throws SQLException;
+    WorksheetSnapshot createWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection)
+            throws SQLException;
 
     FilterViewDefinition createFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) throws SQLException;
 

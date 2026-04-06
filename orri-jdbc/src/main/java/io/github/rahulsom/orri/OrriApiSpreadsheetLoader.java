@@ -22,7 +22,6 @@ import com.google.api.services.sheets.v4.model.SortSpec;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,8 +76,8 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
         String credentialsJson = url.property("credentialsJson");
         if (credentialsJson != null && !credentialsJson.isBlank()) {
             try (InputStream inputStream = new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8))) {
-                GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream)
-                        .createScoped(SheetsScopes.SPREADSHEETS_READONLY);
+                GoogleCredentials credentials =
+                        GoogleCredentials.fromStream(inputStream).createScoped(SheetsScopes.SPREADSHEETS_READONLY);
                 return new HttpCredentialsAdapter(credentials);
             }
         }
@@ -86,20 +85,19 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
         String credentialsFile = url.property("credentialsFile");
         if (credentialsFile != null && !credentialsFile.isBlank()) {
             try (InputStream inputStream = java.nio.file.Files.newInputStream(java.nio.file.Path.of(credentialsFile))) {
-                GoogleCredentials credentials = GoogleCredentials.fromStream(inputStream)
-                        .createScoped(SheetsScopes.SPREADSHEETS_READONLY);
+                GoogleCredentials credentials =
+                        GoogleCredentials.fromStream(inputStream).createScoped(SheetsScopes.SPREADSHEETS_READONLY);
                 return new HttpCredentialsAdapter(credentials);
             }
         }
 
         String apiKey = url.property("apiKey");
         if (apiKey != null && !apiKey.isBlank()) {
-            return request -> {
-            };
+            return request -> {};
         }
 
-        GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
-                .createScoped(SheetsScopes.SPREADSHEETS_READONLY);
+        GoogleCredentials credentials =
+                GoogleCredentials.getApplicationDefault().createScoped(SheetsScopes.SPREADSHEETS_READONLY);
         return new HttpCredentialsAdapter(credentials);
     }
 
@@ -137,9 +135,7 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
 
     private WorksheetSnapshot toWorksheet(com.google.api.services.sheets.v4.model.Sheet sheet) throws SQLException {
         GridData gridData = first(sheet.getData());
-        List<RowData> rowData = gridData == null || gridData.getRowData() == null
-                ? List.of()
-                : gridData.getRowData();
+        List<RowData> rowData = gridData == null || gridData.getRowData() == null ? List.of() : gridData.getRowData();
         if (rowData.isEmpty()) {
             throw new SQLException("Sheet " + sheet.getProperties().getTitle() + " does not contain a header row");
         }
@@ -188,9 +184,8 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
                 List.copyOf(rows));
     }
 
-    private FilterViewDefinition toFilterView(
-            FilterView filterView,
-            Map<Integer, WorksheetSnapshot> worksheetsById) throws SQLException {
+    private FilterViewDefinition toFilterView(FilterView filterView, Map<Integer, WorksheetSnapshot> worksheetsById)
+            throws SQLException {
         GridRange range = filterView.getRange();
         if (range == null || range.getSheetId() == null) {
             return null;
@@ -209,7 +204,9 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
                 criteria.add(new FilterCriterion(
                         Integer.parseInt(entry.getKey()),
                         value.getHiddenValues() == null ? List.of() : List.copyOf(value.getHiddenValues()),
-                        value.getCondition() == null ? null : value.getCondition().getType(),
+                        value.getCondition() == null
+                                ? null
+                                : value.getCondition().getType(),
                         conditionValues(value.getCondition())));
             }
         }
@@ -218,8 +215,7 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
         if (filterView.getSortSpecs() != null) {
             for (SortSpec sortSpec : filterView.getSortSpecs()) {
                 sortKeys.add(new SortKey(
-                        sortSpec.getDimensionIndex(),
-                        "DESCENDING".equalsIgnoreCase(sortSpec.getSortOrder())));
+                        sortSpec.getDimensionIndex(), "DESCENDING".equalsIgnoreCase(sortSpec.getSortOrder())));
             }
         }
 
@@ -255,9 +251,7 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
             String rawHeader = columnIndex < headerCells.size()
                     ? normalizeHeader(headerCells.get(columnIndex).getFormattedValue())
                     : null;
-            String baseName = rawHeader == null || rawHeader.isBlank()
-                    ? "column_" + (columnIndex + 1)
-                    : rawHeader;
+            String baseName = rawHeader == null || rawHeader.isBlank() ? "column_" + (columnIndex + 1) : rawHeader;
             int count = seen.merge(baseName.toLowerCase(Locale.ROOT), 1, Integer::sum);
             headers.add(count == 1 ? baseName : baseName + "_" + count);
         }
@@ -331,7 +325,8 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
 
             if (effectiveValue.getNumberValue() != null) {
                 BigDecimal value = BigDecimal.valueOf(effectiveValue.getNumberValue());
-                return new CellValue(value, formattedValue == null ? value.toPlainString() : formattedValue, ValueKind.NUMBER);
+                return new CellValue(
+                        value, formattedValue == null ? value.toPlainString() : formattedValue, ValueKind.NUMBER);
             }
 
             if (effectiveValue.getStringValue() != null) {
@@ -341,7 +336,8 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
         }
 
         if (formattedValue != null && !formattedValue.isBlank()) {
-            if (isCheckboxCell(cellData) && ("true".equalsIgnoreCase(formattedValue) || "false".equalsIgnoreCase(formattedValue))) {
+            if (isCheckboxCell(cellData)
+                    && ("true".equalsIgnoreCase(formattedValue) || "false".equalsIgnoreCase(formattedValue))) {
                 Boolean value = Boolean.parseBoolean(formattedValue);
                 return new CellValue(value, formattedValue, ValueKind.BOOLEAN);
             }

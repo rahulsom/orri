@@ -1,6 +1,10 @@
 package io.github.rahulsom.orri;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -11,12 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 class OrriDriverTest {
     @Test
@@ -47,7 +46,8 @@ class OrriDriverTest {
             assertNotNull(connection);
             assertFalse(connection.isReadOnly());
 
-            try (ResultSet resultSet = connection.createStatement()
+            try (ResultSet resultSet = connection
+                    .createStatement()
                     .executeQuery("select \"Name\", \"Active\", \"Points\" from \"Employees\" order by \"Name\"")) {
                 assertTrue(resultSet.next());
                 assertEquals("Alice", resultSet.getString(1));
@@ -66,7 +66,8 @@ class OrriDriverTest {
                 assertFalse(resultSet.next());
             }
 
-            try (ResultSet resultSet = connection.createStatement()
+            try (ResultSet resultSet = connection
+                    .createStatement()
                     .executeQuery("select \"Name\" from \"Active Employees\" order by \"Name\"")) {
                 assertTrue(resultSet.next());
                 assertEquals("Alice", resultSet.getString(1));
@@ -114,20 +115,26 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect(
-                "jdbc:orri:test-sheet",
-                properties("accessToken", "token"))) {
+        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
             assertFalse(connection.isReadOnly());
 
-            assertEquals(1, connection.createStatement()
-                    .executeUpdate("insert into \"Employees\" (\"Name\", \"Active\", \"Points\") values ('Dave', true, 2.5)"));
-            assertEquals(1, connection.createStatement()
-                    .executeUpdate("update \"Employees\" set \"Active\" = true where \"Name\" = 'Bob'"));
-            assertEquals(1, connection.createStatement()
-                    .executeUpdate("delete from \"Employees\" where \"Name\" = 'Carol'"));
+            assertEquals(
+                    1,
+                    connection
+                            .createStatement()
+                            .executeUpdate(
+                                    "insert into \"Employees\" (\"Name\", \"Active\", \"Points\") values ('Dave', true, 2.5)"));
+            assertEquals(
+                    1,
+                    connection
+                            .createStatement()
+                            .executeUpdate("update \"Employees\" set \"Active\" = true where \"Name\" = 'Bob'"));
+            assertEquals(
+                    1,
+                    connection.createStatement().executeUpdate("delete from \"Employees\" where \"Name\" = 'Carol'"));
 
-            try (ResultSet resultSet = connection.createStatement()
-                    .executeQuery("select \"Name\" from \"Employees\" order by \"Name\"")) {
+            try (ResultSet resultSet =
+                    connection.createStatement().executeQuery("select \"Name\" from \"Employees\" order by \"Name\"")) {
                 assertTrue(resultSet.next());
                 assertEquals("Alice", resultSet.getString(1));
                 assertTrue(resultSet.next());
@@ -137,7 +144,8 @@ class OrriDriverTest {
                 assertFalse(resultSet.next());
             }
 
-            try (ResultSet resultSet = connection.createStatement()
+            try (ResultSet resultSet = connection
+                    .createStatement()
                     .executeQuery("select \"Name\" from \"Active Employees\" order by \"Name\"")) {
                 assertTrue(resultSet.next());
                 assertEquals("Alice", resultSet.getString(1));
@@ -156,13 +164,12 @@ class OrriDriverTest {
     void rejectsWritesWhenConnectionIsReadOnly() throws Exception {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), noOpSynchronizer());
 
-        try (Connection connection = driver.connect(
-                "jdbc:orri:test-sheet;readOnly=true",
-                properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet;readOnly=true", properties("accessToken", "token"))) {
             assertTrue(connection.isReadOnly());
-            SQLException exception = org.junit.jupiter.api.Assertions.assertThrows(
-                    SQLException.class,
-                    () -> connection.createStatement().executeUpdate("delete from \"Employees\" where \"Name\" = 'Alice'"));
+            SQLException exception = org.junit.jupiter.api.Assertions.assertThrows(SQLException.class, () -> connection
+                    .createStatement()
+                    .executeUpdate("delete from \"Employees\" where \"Name\" = 'Alice'"));
             assertTrue(exception.getMessage().contains("read-only"));
         }
     }
@@ -204,7 +211,8 @@ class OrriDriverTest {
             assertEquals(
                     List.of(new FilterCriterion(1, List.of("FALSE", "false"), null, List.of())),
                     synchronizer.createdFilterViewDefinitions.getFirst().criteria());
-            try (ResultSet resultSet = connection.createStatement()
+            try (ResultSet resultSet = connection
+                    .createStatement()
                     .executeQuery("select \"Name\" from \"Active By Name\" order by \"Name\"")) {
                 assertTrue(resultSet.next());
                 assertEquals("Alice", resultSet.getString(1));
@@ -224,8 +232,7 @@ class OrriDriverTest {
             assertFalse(connection.createStatement().execute("drop table \"Employees\""));
 
             SQLException exception = org.junit.jupiter.api.Assertions.assertThrows(
-                    SQLException.class,
-                    () -> connection.createStatement().executeQuery("select * from \"Employees\""));
+                    SQLException.class, () -> connection.createStatement().executeQuery("select * from \"Employees\""));
             assertNotNull(exception);
         }
 
@@ -299,8 +306,8 @@ class OrriDriverTest {
     }
 
     private static int rowCount(Connection connection, String relationName) throws Exception {
-        try (ResultSet resultSet = connection.createStatement()
-                .executeQuery("select count(*) from \"" + relationName + "\"")) {
+        try (ResultSet resultSet =
+                connection.createStatement().executeQuery("select count(*) from \"" + relationName + "\"")) {
             assertTrue(resultSet.next());
             return resultSet.getInt(1);
         }
@@ -309,11 +316,11 @@ class OrriDriverTest {
     private static SpreadsheetSynchronizer noOpSynchronizer() {
         return new SpreadsheetSynchronizer() {
             @Override
-            public void syncWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {
-            }
+            public void syncWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {}
 
             @Override
-            public WorksheetSnapshot createWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {
+            public WorksheetSnapshot createWorksheet(
+                    OrriJdbcUrl url, WorksheetSnapshot worksheet, Connection connection) {
                 return worksheet;
             }
 
@@ -323,12 +330,10 @@ class OrriDriverTest {
             }
 
             @Override
-            public void deleteWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet) {
-            }
+            public void deleteWorksheet(OrriJdbcUrl url, WorksheetSnapshot worksheet) {}
 
             @Override
-            public void deleteFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) {
-            }
+            public void deleteFilterView(OrriJdbcUrl url, FilterViewDefinition filterView) {}
         };
     }
 

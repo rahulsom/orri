@@ -6,9 +6,7 @@ import java.util.regex.Pattern;
 /**
  * Parsed representation of a supported {@code DROP TABLE} or {@code DROP VIEW} statement.
  */
-record DropRelationSpec(
-        Type type,
-        String relationName) {
+record DropRelationSpec(Type type, String relationName) {
     private static final Pattern DROP_PATTERN = Pattern.compile(
             "^\\s*drop\\s+(table|view)\\s+(?:if\\s+exists\\s+)?(\"(?:[^\"]|\"\")*\"|[^\\s;]+)",
             Pattern.CASE_INSENSITIVE);
