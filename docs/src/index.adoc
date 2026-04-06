@@ -46,7 +46,7 @@ The JDBC URL uses the spreadsheet id directly.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=jdbc-url]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=jdbc-url]
 ----
 
 For the sample spreadsheet below, the spreadsheet id is `1yRm-oPjuUGvfy4uhGc-woytgXQ7nSpxalWVX9djruSQ`.
@@ -63,14 +63,14 @@ Use a service account or an OAuth access token for private spreadsheets.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=connect-api-key]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=connect-api-key]
 ----
 
 === Private Spreadsheet With A Service Account
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=connect-service-account]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=connect-service-account]
 ----
 
 The `credentialsFile` property should point at a Google service account JSON key file.
@@ -82,7 +82,7 @@ Use JDBC metadata to discover worksheets, filter views, and columns.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=inspect-schema]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=inspect-schema]
 ----
 
 Worksheets are reported as `TABLE`.
@@ -94,33 +94,33 @@ A Worksheet in Google Sheets is created with `CREATE TABLE`.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=create-table]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=create-table]
 ----
 
 A Filter View in Google Sheets is created with `CREATE VIEW`.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=create-view]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=create-view]
 ----
 
 These can also be deleted with `DROP TABLE` and `DROP VIEW`.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=drop]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=drop]
 ----
 
 Orri also supports a constrained subset of `ALTER TABLE` and `ALTER VIEW`.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=alter-table]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=alter-table]
 ----
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=alter-view]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=alter-view]
 ----
 
 `ALTER TABLE ... DROP COLUMN ...` is rejected when the worksheet has dependent views.
@@ -135,11 +135,11 @@ Filter views remain read-only.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=insert]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=insert]
 
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=update]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=update]
 
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=delete]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=delete]
 ----
 
 After a successful mutation, the driver synchronizes the affected worksheet back to Google Sheets.
@@ -153,7 +153,7 @@ Filter views use their filter view titles as view names.
 
 [source,java,indent=0]
 ----
-include::../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=select]
+include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/OrriDriverIntegrationTest.java[tag=select]
 ----
 
 In the example above, `Employees` is a worksheet and `Active Employees` is a filter view.
