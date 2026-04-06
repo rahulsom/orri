@@ -190,7 +190,7 @@ class OrriDriverIntegrationTest {
     }
 
     private static String authorize(Path clientSecretPath) throws Exception {
-        Path tokenDirectory = Path.of("orri-jdbc", "build", "google-oauth-tokens", "spreadsheets-rw");
+        Path tokenDirectory = Path.of("local", "google-oauth-tokens", "spreadsheets-rw");
         Files.createDirectories(tokenDirectory);
 
         try (Reader reader = Files.newBufferedReader(clientSecretPath)) {
