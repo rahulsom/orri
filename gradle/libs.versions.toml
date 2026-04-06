@@ -5,6 +5,7 @@ google-oauth-client = "1.39.0"
 google-sheets = "v4-rev20260213-2.0.0"
 h2 = "2.4.240"
 junit = "6.0.1"
+waena = "0.24.0"
 
 [libraries]
 google-api-client-gson = { module = "com.google.api-client:google-api-client-gson", version.ref = "google-api-client" }
@@ -12,3 +13,7 @@ google-auth-http = { module = "com.google.auth:google-auth-library-oauth2-http",
 google-oauth-client-jetty = { module = "com.google.oauth-client:google-oauth-client-jetty", version.ref = "google-oauth-client" }
 google-sheets = { module = "com.google.apis:google-api-services-sheets", version.ref = "google-sheets" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
+
+[plugins]
+waena-published = { id = "com.github.rahulsom.waena.published" }
+waena-root = { id = "com.github.rahulsom.waena.root", version.ref = "waena" }
