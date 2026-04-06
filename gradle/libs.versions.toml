@@ -5,7 +5,7 @@ google-oauth-client = "1.39.0"
 google-sheets = "v4-rev20260213-2.0.0"
 h2 = "2.4.240"
 junit = "6.0.1"
-spotless = "8.3.0"
+spotless = "8.4.0"
 waena = "0.24.0"
 
 [libraries]
