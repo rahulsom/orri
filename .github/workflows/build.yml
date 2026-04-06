@@ -24,3 +24,37 @@ jobs:
       actions: read
       contents: read
       packages: read
+
+  publish-site:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: gradle/actions/wrapper-validation@v6
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: zulu
+          cache: gradle
+
+      - uses: gradle/actions/setup-gradle@v6
+        name: Setup Gradle
+
+      - name: Build docs
+        run: ./gradlew asciidoctorDocs --no-daemon
+
+      - name: Deploy docs to ghpages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./docs/build/
