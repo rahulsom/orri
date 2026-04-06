@@ -82,11 +82,16 @@ class OrriDriverIntegrationTest {
                         """.formatted(tableName));
                 // end::insert[]
 
-                List<String> initialRows = selectRows(
-                        statement,
-                        "select \"Name\", \"Active\", \"Score\" from \"%s\" order by \"Name\"".formatted(tableName));
-                List<String> initialViewRows = selectRows(
-                        statement, "select \"Name\", \"Active\" from \"%s\" order by \"Name\"".formatted(viewName));
+                List<String> initialRows = selectRows(statement, """
+                                select "Name", "Active", "Score"
+                                from "%s"
+                                order by "Name"
+                                """.formatted(tableName));
+                List<String> initialViewRows = selectRows(statement, """
+                                select "Name", "Active"
+                                from "%s"
+                                order by "Name"
+                                """.formatted(viewName));
 
                 // tag::update[]
                 statement.executeUpdate("""
@@ -155,14 +160,21 @@ class OrriDriverIntegrationTest {
                 // end::alter-view[]
 
                 // tag::select[]
-                List<String> finalRows = selectRows(
-                        statement,
-                        "select \"Name\", \"Active\", \"Score\" from \"%s\" order by \"Name\"".formatted(tableName));
-                List<String> alteredTableRows = selectRows(
-                        statement,
-                        "select \"Name\", \"Comment\" from \"%s\" order by \"Name\"".formatted(renamedAlterTableName));
-                List<String> finalViewRows = selectRows(
-                        statement, "select \"Name\" from \"%s\" order by \"Name\"".formatted(renamedViewName));
+                List<String> finalRows = selectRows(statement, """
+                                select "Name", "Active", "Score"
+                                from "%s"
+                                order by "Name"
+                                """.formatted(tableName));
+                List<String> alteredTableRows = selectRows(statement, """
+                                select "Name", "Comment"
+                                from "%s"
+                                order by "Name"
+                                """.formatted(renamedAlterTableName));
+                List<String> finalViewRows = selectRows(statement, """
+                                select "Name"
+                                from "%s"
+                                order by "Name"
+                                """.formatted(renamedViewName));
                 // end::select[]
 
                 // tag::drop[]
