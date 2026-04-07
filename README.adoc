@@ -11,6 +11,7 @@
 :deprecated-middle: ?style=for-the-badge&label=R&color=lightgrey[alt=Maven Central Version,height=30,link="https://central.sonatype.com/artifact/{package}/
 
 Orri exposes a Google spreadsheet as a JDBC database.
+_Orri_ is Basque for _sheet_.
 
 image:https://img.shields.io/github/commits-since/rahulsom/orri/latest?style=for-the-badge[GitHub commits since latest release, link="https://github.com/rahulsom/orri/releases/new"]
 
