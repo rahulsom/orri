@@ -3,6 +3,8 @@ plugins {
     id("com.github.rahulsom.waena.published")
 }
 
+description = "JDBC driver for querying and modifying Google Sheets as tables and views."
+
 dependencies {
     implementation(libs.google.api.client.gson)
     implementation(libs.google.auth.http)
