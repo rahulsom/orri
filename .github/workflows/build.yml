@@ -20,6 +20,7 @@ jobs:
     with:
       codeql: false
       codeql-actions: true
+      publish-candidates: true
     permissions:
       security-events: write
       actions: read
