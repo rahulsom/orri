@@ -1,5 +1,16 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
 
+buildscript {
+    configurations.classpath {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.eclipse.jgit") {
+                useVersion("5.13.5.202508271544-r")
+                because("JReleaser expects org.eclipse.jgit.lib.GpgObjectSigner, which is absent in JGit 7.x.")
+            }
+        }
+    }
+}
+
 plugins {
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.waena.root)
