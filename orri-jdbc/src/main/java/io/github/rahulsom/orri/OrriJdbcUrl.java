@@ -52,10 +52,11 @@ record OrriJdbcUrl(String originalUrl, String spreadsheetId, Properties properti
     }
 
     String applicationName() {
-        return Objects.requireNonNullElse(property("applicationName"), "orri");
+        return Objects.requireNonNullElse(
+                property(Constants.APPLICATION_NAME_PROPERTY), Constants.DEFAULT_APPLICATION_NAME);
     }
 
     boolean readOnly() {
-        return "true".equalsIgnoreCase(property("readOnly"));
+        return "true".equalsIgnoreCase(property(Constants.READ_ONLY_PROPERTY));
     }
 }

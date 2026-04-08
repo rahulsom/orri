@@ -34,8 +34,8 @@ class DocumentationSamplesTest {
     private static Connection connectWithApiKey(OrriDriver driver) throws Exception {
         // tag::connect-api-key[]
         Properties properties = new Properties();
-        properties.setProperty("apiKey", "your-google-api-key");
-        properties.setProperty("readOnly", "true");
+        properties.setProperty(Constants.API_KEY_PROPERTY, "your-google-api-key");
+        properties.setProperty(Constants.READ_ONLY_PROPERTY, "true");
 
         return driver.connect(SPREADSHEET_URL, properties);
         // end::connect-api-key[]
@@ -53,7 +53,7 @@ class DocumentationSamplesTest {
     private static Connection connectWithServiceAccount(OrriDriver driver) throws Exception {
         // tag::connect-service-account[]
         Properties properties = new Properties();
-        properties.setProperty("credentialsFile", "/path/to/service-account.json");
+        properties.setProperty(Constants.CREDENTIALS_FILE_PROPERTY, "/path/to/service-account.json");
 
         return driver.connect(SPREADSHEET_URL, properties);
         // end::connect-service-account[]
@@ -69,8 +69,8 @@ class DocumentationSamplesTest {
     private static List<String> queryWorksheetAndFilterView(OrriDriver driver) throws Exception {
         // tag::query-sheet-and-view[]
         Properties properties = new Properties();
-        properties.setProperty("apiKey", "your-google-api-key");
-        properties.setProperty("readOnly", "true");
+        properties.setProperty(Constants.API_KEY_PROPERTY, "your-google-api-key");
+        properties.setProperty(Constants.READ_ONLY_PROPERTY, "true");
 
         List<String> output = new ArrayList<>();
         try (Connection connection = driver.connect(SPREADSHEET_URL, properties);
@@ -106,8 +106,8 @@ class DocumentationSamplesTest {
     private static SchemaSnapshot inspectSchema(OrriDriver driver) throws Exception {
         // tag::inspect-schema[]
         Properties properties = new Properties();
-        properties.setProperty("apiKey", "your-google-api-key");
-        properties.setProperty("readOnly", "true");
+        properties.setProperty(Constants.API_KEY_PROPERTY, "your-google-api-key");
+        properties.setProperty(Constants.READ_ONLY_PROPERTY, "true");
 
         List<String> relations = new ArrayList<>();
         List<String> columns = new ArrayList<>();
@@ -116,10 +116,10 @@ class DocumentationSamplesTest {
 
             try (ResultSet tables = metaData.getTables(null, null, "%", null)) {
                 while (tables.next()) {
-                    String schemaName = tables.getString("TABLE_SCHEM");
-                    String tableName = tables.getString("TABLE_NAME");
-                    String tableType = tables.getString("TABLE_TYPE");
-                    if (!"INFORMATION_SCHEMA".equalsIgnoreCase(schemaName)) {
+                    String schemaName = tables.getString(Constants.TABLE_SCHEMA_COLUMN);
+                    String tableName = tables.getString(Constants.TABLE_NAME_COLUMN);
+                    String tableType = tables.getString(Constants.TABLE_TYPE_COLUMN);
+                    if (!Constants.INFORMATION_SCHEMA.equalsIgnoreCase(schemaName)) {
                         relations.add(tableName + " (" + normalizeTableType(tableType) + ")");
                     }
                 }
@@ -147,7 +147,7 @@ class DocumentationSamplesTest {
     private static List<String> mutateWorksheet(OrriDriver driver) throws Exception {
         // tag::write-sheet[]
         Properties properties = new Properties();
-        properties.setProperty("accessToken", "your-oauth-access-token");
+        properties.setProperty(Constants.ACCESS_TOKEN_PROPERTY, "your-oauth-access-token");
 
         try (Connection connection = driver.connect(SPREADSHEET_URL, properties);
                 Statement statement = connection.createStatement()) {
@@ -178,7 +178,7 @@ class DocumentationSamplesTest {
     private static SchemaManagementSnapshot createWorksheetAndFilterView(OrriDriver driver) throws Exception {
         // tag::create-schema[]
         Properties properties = new Properties();
-        properties.setProperty("accessToken", "your-oauth-access-token");
+        properties.setProperty(Constants.ACCESS_TOKEN_PROPERTY, "your-oauth-access-token");
 
         List<String> createdTables = new ArrayList<>();
         List<String> createdViews = new ArrayList<>();
@@ -217,7 +217,7 @@ class DocumentationSamplesTest {
     private static SchemaManagementSnapshot dropWorksheetAndFilterView(OrriDriver driver) throws Exception {
         // tag::drop-schema[]
         Properties properties = new Properties();
-        properties.setProperty("accessToken", "your-oauth-access-token");
+        properties.setProperty(Constants.ACCESS_TOKEN_PROPERTY, "your-oauth-access-token");
 
         List<String> droppedRelations = new ArrayList<>();
         try (Connection connection = driver.connect(SPREADSHEET_URL, properties);
