@@ -906,6 +906,18 @@ Quoted identifiers are recommended when sheet names or filter view names contain
 <p>Numeric columns map to JDBC decimals.</p>
 </li>
 <li>
+<p>Google Sheets <code>DATE</code> cells map to JDBC dates.</p>
+</li>
+<li>
+<p>Google Sheets <code>TIME</code> cells map to JDBC times.</p>
+</li>
+<li>
+<p>Google Sheets <code>DATE_TIME</code> cells map to JDBC timestamps.</p>
+</li>
+<li>
+<p>If a checkbox column is used in Google Sheets, the driver exposes it as a boolean column when the rendered values are <code>true</code> and <code>false</code>.</p>
+</li>
+<li>
 <p>All other columns map to JDBC strings.</p>
 </li>
 <li>
