@@ -1,9 +1,6 @@
 package io.github.rahulsom.orri;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -22,15 +19,15 @@ class DocumentationSamplesTest {
 
     @Test
     void jdbcUrlUsesTheSpreadsheetId() {
-        assertTrue(SPREADSHEET_URL.startsWith("jdbc:orri:"));
+        assertThat(SPREADSHEET_URL).startsWith("jdbc:orri:");
     }
 
     @Test
     void connectWithApiKey() throws Exception {
         try (Connection connection = connectWithApiKey(sampleDriver())) {
-            assertNotNull(connection);
-            assertTrue(connection.isReadOnly());
-            assertEquals(3, rowCount(connection, "Employees"));
+            assertThat(connection).isNotNull();
+            assertThat(connection.isReadOnly()).isTrue();
+            assertThat(rowCount(connection, "Employees")).isEqualTo(3);
         }
     }
 
@@ -47,9 +44,9 @@ class DocumentationSamplesTest {
     @Test
     void connectWithServiceAccount() throws Exception {
         try (Connection connection = connectWithServiceAccount(sampleDriver())) {
-            assertNotNull(connection);
-            assertFalse(connection.isReadOnly());
-            assertEquals(3, rowCount(connection, "Employees"));
+            assertThat(connection).isNotNull();
+            assertThat(connection.isReadOnly()).isFalse();
+            assertThat(rowCount(connection, "Employees")).isEqualTo(3);
         }
     }
 
@@ -66,7 +63,7 @@ class DocumentationSamplesTest {
     void queryWorksheetAndFilterView() throws Exception {
         List<String> rows = queryWorksheetAndFilterView(sampleDriver());
 
-        assertEquals(List.of("Alice -> true", "Bob -> false", "Carol -> true", "Alice", "Carol"), rows);
+        assertThat(rows).isEqualTo(List.of("Alice -> true", "Bob -> false", "Carol -> true", "Alice", "Carol"));
     }
 
     private static List<String> queryWorksheetAndFilterView(OrriDriver driver) throws Exception {
@@ -102,8 +99,8 @@ class DocumentationSamplesTest {
     void inspectSchema() throws Exception {
         SchemaSnapshot schemaSnapshot = inspectSchema(sampleDriver());
 
-        assertEquals(List.of("Active Employees (VIEW)", "Employees (TABLE)"), schemaSnapshot.relations());
-        assertEquals(List.of("Name VARCHAR", "Active BOOLEAN", "Points DECIMAL"), schemaSnapshot.columns());
+        assertThat(schemaSnapshot.relations()).isEqualTo(List.of("Active Employees (VIEW)", "Employees (TABLE)"));
+        assertThat(schemaSnapshot.columns()).isEqualTo(List.of("Name VARCHAR", "Active BOOLEAN", "Points DECIMAL"));
     }
 
     private static SchemaSnapshot inspectSchema(OrriDriver driver) throws Exception {
@@ -144,7 +141,7 @@ class DocumentationSamplesTest {
     void mutateWorksheet() throws Exception {
         List<String> names = mutateWorksheet(sampleDriver());
 
-        assertEquals(List.of("Alice", "Bob", "Carol"), names);
+        assertThat(names).isEqualTo(List.of("Alice", "Bob", "Carol"));
     }
 
     private static List<String> mutateWorksheet(OrriDriver driver) throws Exception {
@@ -174,8 +171,8 @@ class DocumentationSamplesTest {
     void createWorksheetAndFilterView() throws Exception {
         SchemaManagementSnapshot snapshot = createWorksheetAndFilterView(sampleDriver());
 
-        assertEquals(List.of("Projects"), snapshot.createdTables());
-        assertEquals(List.of("Active Projects"), snapshot.createdViews());
+        assertThat(snapshot.createdTables()).isEqualTo(List.of("Projects"));
+        assertThat(snapshot.createdViews()).isEqualTo(List.of("Active Projects"));
     }
 
     private static SchemaManagementSnapshot createWorksheetAndFilterView(OrriDriver driver) throws Exception {
@@ -213,8 +210,8 @@ class DocumentationSamplesTest {
     void dropWorksheetAndFilterView() throws Exception {
         SchemaManagementSnapshot snapshot = dropWorksheetAndFilterView(sampleDriver());
 
-        assertEquals(List.of("Projects"), snapshot.createdTables());
-        assertEquals(List.of("Active Projects"), snapshot.createdViews());
+        assertThat(snapshot.createdTables()).isEqualTo(List.of("Projects"));
+        assertThat(snapshot.createdViews()).isEqualTo(List.of("Active Projects"));
     }
 
     private static SchemaManagementSnapshot dropWorksheetAndFilterView(OrriDriver driver) throws Exception {
@@ -255,7 +252,7 @@ class DocumentationSamplesTest {
     private static int rowCount(Connection connection, String relationName) throws Exception {
         try (Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery("select count(*) from \"" + relationName + "\"")) {
-            assertTrue(resultSet.next());
+            assertThat(resultSet.next()).isTrue();
             return resultSet.getInt(1);
         }
     }

@@ -1,8 +1,6 @@
 package io.github.rahulsom.orri;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -53,8 +51,8 @@ class OrriDriverIntegrationTest {
 
         try (Connection connection = new OrriDriver().connect("jdbc:orri:" + spreadsheetId(), properties);
                 Statement statement = connection.createStatement()) {
-            assertNotNull(connection);
-            assertFalse(connection.isReadOnly());
+            assertThat(connection).isNotNull();
+            assertThat(connection.isReadOnly()).isFalse();
 
             try {
                 // tag::create-table[]
@@ -189,14 +187,15 @@ class OrriDriverIntegrationTest {
                 statement.execute("drop table \"%s\"".formatted(tableName));
                 // end::drop[]
 
-                assertEquals(
-                        List.of("Ada,true,10.50", "Bob,false,7.25", "Cy,true,9.75", "Dee,false,5.50", "Eve,true,8.00"),
-                        initialRows);
-                assertEquals(List.of("Ada,true", "Cy,true", "Eve,true"), initialViewRows);
-                assertEquals(List.of("Ada,true", "Cy,true", "Dee,true", "Eve,true"), updatedViewRows);
-                assertEquals(List.of("Ada,true,10.50", "Cy,true,9.75", "Dee,true,6.50", "Eve,true,8.00"), finalRows);
-                assertEquals(List.of("Ada,top performer"), alteredTableRows);
-                assertEquals(List.of("Ada"), finalViewRows);
+                assertThat(initialRows)
+                        .isEqualTo(List.of(
+                                "Ada,true,10.50", "Bob,false,7.25", "Cy,true,9.75", "Dee,false,5.50", "Eve,true,8.00"));
+                assertThat(initialViewRows).isEqualTo(List.of("Ada,true", "Cy,true", "Eve,true"));
+                assertThat(updatedViewRows).isEqualTo(List.of("Ada,true", "Cy,true", "Dee,true", "Eve,true"));
+                assertThat(finalRows)
+                        .isEqualTo(List.of("Ada,true,10.50", "Cy,true,9.75", "Dee,true,6.50", "Eve,true,8.00"));
+                assertThat(alteredTableRows).isEqualTo(List.of("Ada,top performer"));
+                assertThat(finalViewRows).isEqualTo(List.of("Ada"));
             } finally {
                 dropIfExists(statement, renamedViewName, true);
                 dropIfExists(statement, viewName, true);
@@ -239,35 +238,36 @@ class OrriDriverIntegrationTest {
 
             try (Connection connection = new OrriDriver().connect("jdbc:orri:" + spreadsheetId(), properties);
                     Statement statement = connection.createStatement()) {
-                assertEquals(
-                        Map.of(
+                assertThat(columnTypes(statement, tableName))
+                        .isEqualTo(Map.of(
                                 "Name", "VARCHAR",
                                 "EventDate", "DATE",
                                 "EventTime", "TIME",
-                                "EventTimestamp", "TIMESTAMP"),
-                        columnTypes(statement, tableName));
+                                "EventTimestamp", "TIMESTAMP"));
 
                 try (ResultSet resultSet = statement.executeQuery("""
                         select "Name", "EventDate", "EventTime", "EventTimestamp"
                         from "%s"
                         order by "Name"
                         """.formatted(tableName))) {
-                    assertEquals(true, resultSet.next());
-                    assertEquals("Launch", resultSet.getString("Name"));
-                    assertEquals(LocalDate.of(2026, 4, 7), resultSet.getObject("EventDate", LocalDate.class));
-                    assertEquals(LocalTime.of(6, 0), resultSet.getObject("EventTime", LocalTime.class));
-                    assertEquals(
-                            LocalDateTime.of(2026, 4, 7, 6, 0),
-                            resultSet.getObject("EventTimestamp", LocalDateTime.class));
+                    assertThat(resultSet.next()).isTrue();
+                    assertThat(resultSet.getString("Name")).isEqualTo("Launch");
+                    assertThat(resultSet.getObject("EventDate", LocalDate.class))
+                            .isEqualTo(LocalDate.of(2026, 4, 7));
+                    assertThat(resultSet.getObject("EventTime", LocalTime.class))
+                            .isEqualTo(LocalTime.of(6, 0));
+                    assertThat(resultSet.getObject("EventTimestamp", LocalDateTime.class))
+                            .isEqualTo(LocalDateTime.of(2026, 4, 7, 6, 0));
 
-                    assertEquals(true, resultSet.next());
-                    assertEquals("Review", resultSet.getString("Name"));
-                    assertEquals(LocalDate.of(2026, 4, 8), resultSet.getObject("EventDate", LocalDate.class));
-                    assertEquals(LocalTime.of(18, 0), resultSet.getObject("EventTime", LocalTime.class));
-                    assertEquals(
-                            LocalDateTime.of(2026, 4, 8, 18, 0),
-                            resultSet.getObject("EventTimestamp", LocalDateTime.class));
-                    assertEquals(false, resultSet.next());
+                    assertThat(resultSet.next()).isTrue();
+                    assertThat(resultSet.getString("Name")).isEqualTo("Review");
+                    assertThat(resultSet.getObject("EventDate", LocalDate.class))
+                            .isEqualTo(LocalDate.of(2026, 4, 8));
+                    assertThat(resultSet.getObject("EventTime", LocalTime.class))
+                            .isEqualTo(LocalTime.of(18, 0));
+                    assertThat(resultSet.getObject("EventTimestamp", LocalDateTime.class))
+                            .isEqualTo(LocalDateTime.of(2026, 4, 8, 18, 0));
+                    assertThat(resultSet.next()).isFalse();
                 }
             }
         } finally {
@@ -346,7 +346,7 @@ class OrriDriverIntegrationTest {
 
     private static Path resourcePath(String resourceName) throws Exception {
         var resource = OrriDriverIntegrationTest.class.getClassLoader().getResource(resourceName);
-        assertNotNull(resource);
+        assertThat(resource).isNotNull();
         return Path.of(resource.toURI());
     }
 
