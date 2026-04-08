@@ -17,9 +17,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -201,6 +207,77 @@ class OrriDriverIntegrationTest {
         }
     }
 
+    @Test
+    @EnabledIfSystemProperty(named = "orri.integration", matches = "true")
+    void createsAndQueriesTemporalWorksheetAgainstOrri() throws Exception {
+        Path clientSecretPath = resourcePath("local/google-secret.json");
+        String accessToken = authorize(clientSecretPath);
+        String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        String tableName = "Integration Temporal_" + suffix;
+
+        Properties properties = new Properties();
+        properties.setProperty("accessToken", accessToken);
+        properties.setProperty("applicationName", "orri-integration-test");
+
+        try {
+            try (Connection connection = new OrriDriver().connect("jdbc:orri:" + spreadsheetId(), properties);
+                    Statement statement = connection.createStatement()) {
+                statement.execute("""
+                        create table "%s" (
+                            "Name" varchar,
+                            "EventDate" date,
+                            "EventTime" time,
+                            "EventTimestamp" timestamp
+                        )
+                        """.formatted(tableName));
+                statement.executeUpdate("""
+                        insert into "%s" ("Name", "EventDate", "EventTime", "EventTimestamp") values
+                        ('Launch', DATE '2026-04-07', TIME '06:00:00', TIMESTAMP '2026-04-07 06:00:00'),
+                        ('Review', DATE '2026-04-08', TIME '18:00:00', TIMESTAMP '2026-04-08 18:00:00')
+                        """.formatted(tableName));
+            }
+
+            try (Connection connection = new OrriDriver().connect("jdbc:orri:" + spreadsheetId(), properties);
+                    Statement statement = connection.createStatement()) {
+                assertEquals(
+                        Map.of(
+                                "Name", "VARCHAR",
+                                "EventDate", "DATE",
+                                "EventTime", "TIME",
+                                "EventTimestamp", "TIMESTAMP"),
+                        columnTypes(statement, tableName));
+
+                try (ResultSet resultSet = statement.executeQuery("""
+                        select "Name", "EventDate", "EventTime", "EventTimestamp"
+                        from "%s"
+                        order by "Name"
+                        """.formatted(tableName))) {
+                    assertEquals(true, resultSet.next());
+                    assertEquals("Launch", resultSet.getString("Name"));
+                    assertEquals(LocalDate.of(2026, 4, 7), resultSet.getObject("EventDate", LocalDate.class));
+                    assertEquals(LocalTime.of(6, 0), resultSet.getObject("EventTime", LocalTime.class));
+                    assertEquals(
+                            LocalDateTime.of(2026, 4, 7, 6, 0),
+                            resultSet.getObject("EventTimestamp", LocalDateTime.class));
+
+                    assertEquals(true, resultSet.next());
+                    assertEquals("Review", resultSet.getString("Name"));
+                    assertEquals(LocalDate.of(2026, 4, 8), resultSet.getObject("EventDate", LocalDate.class));
+                    assertEquals(LocalTime.of(18, 0), resultSet.getObject("EventTime", LocalTime.class));
+                    assertEquals(
+                            LocalDateTime.of(2026, 4, 8, 18, 0),
+                            resultSet.getObject("EventTimestamp", LocalDateTime.class));
+                    assertEquals(false, resultSet.next());
+                }
+            }
+        } finally {
+            try (Connection connection = new OrriDriver().connect("jdbc:orri:" + spreadsheetId(), properties);
+                    Statement statement = connection.createStatement()) {
+                dropIfExists(statement, tableName, false);
+            }
+        }
+    }
+
     private static String authorize(Path clientSecretPath) throws Exception {
         Path tokenDirectory = Path.of("local", "google-oauth-tokens", "spreadsheets-rw");
         Files.createDirectories(tokenDirectory);
@@ -246,6 +323,20 @@ class OrriDriverIntegrationTest {
         return rows;
     }
 
+    private static Map<String, String> columnTypes(Statement statement, String relationName) throws Exception {
+        Map<String, String> columnTypes = new LinkedHashMap<>();
+        try (ResultSet resultSet =
+                statement.executeQuery("select * from " + quoteIdentifier(relationName) + " fetch first 1 row only")) {
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            for (int columnIndex = 1; columnIndex <= metaData.getColumnCount(); columnIndex++) {
+                columnTypes.put(
+                        metaData.getColumnName(columnIndex),
+                        normalizeTypeName(metaData.getColumnTypeName(columnIndex)));
+            }
+        }
+        return columnTypes;
+    }
+
     private static void dropIfExists(Statement statement, String relationName, boolean view) {
         try {
             statement.execute((view ? "drop view \"" : "drop table \"") + relationName + "\"");
@@ -261,5 +352,13 @@ class OrriDriverIntegrationTest {
 
     private static String spreadsheetId() {
         return System.getProperty("orri.integration.spreadsheetId", DEFAULT_SPREADSHEET_ID);
+    }
+
+    private static String normalizeTypeName(String typeName) {
+        return "CHARACTER VARYING".equalsIgnoreCase(typeName) ? "VARCHAR" : typeName;
+    }
+
+    private static String quoteIdentifier(String identifier) {
+        return "\"" + identifier.replace("\"", "\"\"") + "\"";
     }
 }

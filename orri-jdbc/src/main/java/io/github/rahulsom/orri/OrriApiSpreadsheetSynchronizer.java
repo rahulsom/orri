@@ -12,6 +12,8 @@ import com.google.api.services.sheets.v4.model.AddSheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetResponse;
 import com.google.api.services.sheets.v4.model.BooleanCondition;
+import com.google.api.services.sheets.v4.model.CellData;
+import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.ClearValuesRequest;
 import com.google.api.services.sheets.v4.model.ConditionValue;
 import com.google.api.services.sheets.v4.model.DeleteFilterViewRequest;
@@ -19,6 +21,8 @@ import com.google.api.services.sheets.v4.model.DeleteSheetRequest;
 import com.google.api.services.sheets.v4.model.FilterCriteria;
 import com.google.api.services.sheets.v4.model.FilterView;
 import com.google.api.services.sheets.v4.model.GridRange;
+import com.google.api.services.sheets.v4.model.NumberFormat;
+import com.google.api.services.sheets.v4.model.RepeatCellRequest;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.SortSpec;
@@ -63,6 +67,8 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
                     .update(url.spreadsheetId(), sheetRange + "!A1", valueRange)
                     .setValueInputOption("USER_ENTERED")
                     .execute();
+
+            applyColumnFormats(sheets, url.spreadsheetId(), worksheet);
         } catch (IOException exception) {
             throw new SQLException("Failed to synchronize worksheet " + worksheet.name(), exception);
         }
@@ -282,7 +288,7 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
                 List<Object> row = new ArrayList<>(worksheet.columnNames().size());
                 for (int columnIndex = 0; columnIndex < worksheet.columnNames().size(); columnIndex++) {
                     Object value = resultSet.getObject(columnIndex + 1);
-                    row.add(toCellValue(value));
+                    row.add(toCellValue(value, worksheet.columnTypes().get(columnIndex)));
                 }
                 values.add(row);
             }
@@ -297,12 +303,15 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
                 .collect(java.util.stream.Collectors.joining(", "));
     }
 
-    private Object toCellValue(Object value) {
+    private Object toCellValue(Object value, ColumnType columnType) {
         if (value == null) {
             return "";
         }
         if (value instanceof BigDecimal bigDecimal) {
             return bigDecimal.toPlainString();
+        }
+        if (columnType == ColumnType.DATE || columnType == ColumnType.TIME || columnType == ColumnType.TIMESTAMP) {
+            return SheetsTemporalSupport.toSerial(value, columnType).toPlainString();
         }
         return value;
     }
@@ -336,6 +345,43 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
                         .setDimensionIndex(sortKey.columnIndex())
                         .setSortOrder(sortKey.descending() ? "DESCENDING" : "ASCENDING"))
                 .toList();
+    }
+
+    private void applyColumnFormats(Sheets sheets, String spreadsheetId, WorksheetSnapshot worksheet)
+            throws IOException {
+        if (worksheet.sheetId() < 0) {
+            return;
+        }
+
+        List<Request> requests = new ArrayList<>();
+        for (int columnIndex = 0; columnIndex < worksheet.columnTypes().size(); columnIndex++) {
+            ColumnType columnType = worksheet.columnTypes().get(columnIndex);
+            String numberFormatType = SheetsTemporalSupport.numberFormatType(columnType);
+            String pattern = SheetsTemporalSupport.numberFormatPattern(columnType);
+            if (numberFormatType == null || pattern == null) {
+                continue;
+            }
+
+            requests.add(new Request()
+                    .setRepeatCell(new RepeatCellRequest()
+                            .setRange(new GridRange()
+                                    .setSheetId(worksheet.sheetId())
+                                    .setStartRowIndex(1)
+                                    .setStartColumnIndex(columnIndex)
+                                    .setEndColumnIndex(columnIndex + 1))
+                            .setCell(new CellData()
+                                    .setUserEnteredFormat(new CellFormat()
+                                            .setNumberFormat(new NumberFormat()
+                                                    .setType(numberFormatType)
+                                                    .setPattern(pattern))))
+                            .setFields("userEnteredFormat.numberFormat")));
+        }
+
+        if (!requests.isEmpty()) {
+            sheets.spreadsheets()
+                    .batchUpdate(spreadsheetId, new BatchUpdateSpreadsheetRequest().setRequests(requests))
+                    .execute();
+        }
     }
 
     private String quoteSheetName(String sheetName) {

@@ -86,6 +86,9 @@ record SortKey(int columnIndex, boolean descending) {}
 enum ValueKind {
     BOOLEAN,
     NUMBER,
+    DATE,
+    TIME,
+    TIMESTAMP,
     STRING,
     BLANK
 }
@@ -96,6 +99,9 @@ enum ValueKind {
 enum ColumnType {
     BOOLEAN("BOOLEAN", Types.BOOLEAN),
     DECIMAL("DECIMAL(38, 10)", Types.DECIMAL),
+    DATE("DATE", Types.DATE),
+    TIME("TIME", Types.TIME),
+    TIMESTAMP("TIMESTAMP", Types.TIMESTAMP),
     VARCHAR("VARCHAR", Types.VARCHAR);
 
     private final String ddlType;

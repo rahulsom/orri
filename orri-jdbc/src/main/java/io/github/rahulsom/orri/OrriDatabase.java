@@ -8,6 +8,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -131,6 +134,10 @@ final class OrriDatabase {
         return switch (columnType) {
             case BOOLEAN -> new CellValue(value, String.valueOf(value), ValueKind.BOOLEAN);
             case DECIMAL -> new CellValue(value, String.valueOf(value), ValueKind.NUMBER);
+            case DATE -> new CellValue(SheetsTemporalSupport.asLocalDate(value), String.valueOf(value), ValueKind.DATE);
+            case TIME -> new CellValue(SheetsTemporalSupport.asLocalTime(value), String.valueOf(value), ValueKind.TIME);
+            case TIMESTAMP ->
+                new CellValue(SheetsTemporalSupport.asLocalDateTime(value), String.valueOf(value), ValueKind.TIMESTAMP);
             case VARCHAR -> new CellValue(String.valueOf(value), String.valueOf(value), ValueKind.STRING);
         };
     }
@@ -150,6 +157,9 @@ final class OrriDatabase {
                     java.sql.Types.FLOAT,
                     java.sql.Types.DOUBLE,
                     java.sql.Types.REAL -> ColumnType.DECIMAL;
+            case java.sql.Types.DATE -> ColumnType.DATE;
+            case java.sql.Types.TIME -> ColumnType.TIME;
+            case java.sql.Types.TIMESTAMP -> ColumnType.TIMESTAMP;
             default -> ColumnType.VARCHAR;
         };
     }
@@ -331,6 +341,21 @@ final class OrriDatabase {
             return leftNumber.compareTo(rightNumber);
         }
 
+        if (left.kind() == ValueKind.DATE && right.kind() == ValueKind.DATE) {
+            return SheetsTemporalSupport.asLocalDate(left.typedValue())
+                    .compareTo(SheetsTemporalSupport.asLocalDate(right.typedValue()));
+        }
+
+        if (left.kind() == ValueKind.TIME && right.kind() == ValueKind.TIME) {
+            return SheetsTemporalSupport.asLocalTime(left.typedValue())
+                    .compareTo(SheetsTemporalSupport.asLocalTime(right.typedValue()));
+        }
+
+        if (left.kind() == ValueKind.TIMESTAMP && right.kind() == ValueKind.TIMESTAMP) {
+            return SheetsTemporalSupport.asLocalDateTime(left.typedValue())
+                    .compareTo(SheetsTemporalSupport.asLocalDateTime(right.typedValue()));
+        }
+
         if (left.kind() == ValueKind.BOOLEAN && right.kind() == ValueKind.BOOLEAN) {
             return Boolean.compare(asBoolean(left), asBoolean(right));
         }
@@ -353,6 +378,9 @@ final class OrriDatabase {
         return switch (columnType) {
             case BOOLEAN -> cell.kind() == ValueKind.BLANK ? null : asBoolean(cell);
             case DECIMAL -> asNumber(cell);
+            case DATE -> cell.kind() == ValueKind.BLANK ? null : asDate(cell);
+            case TIME -> cell.kind() == ValueKind.BLANK ? null : asTime(cell);
+            case TIMESTAMP -> cell.kind() == ValueKind.BLANK ? null : asTimestamp(cell);
             case VARCHAR -> cell.displayValue();
         };
     }
@@ -369,6 +397,27 @@ final class OrriDatabase {
             return value;
         }
         return parseBigDecimal(cell.displayValue());
+    }
+
+    private static LocalDate asDate(CellValue cell) {
+        if (cell.kind() == ValueKind.DATE) {
+            return SheetsTemporalSupport.asLocalDate(cell.typedValue());
+        }
+        return null;
+    }
+
+    private static LocalTime asTime(CellValue cell) {
+        if (cell.kind() == ValueKind.TIME) {
+            return SheetsTemporalSupport.asLocalTime(cell.typedValue());
+        }
+        return null;
+    }
+
+    private static LocalDateTime asTimestamp(CellValue cell) {
+        if (cell.kind() == ValueKind.TIMESTAMP) {
+            return SheetsTemporalSupport.asLocalDateTime(cell.typedValue());
+        }
+        return null;
     }
 
     private static BigDecimal parseBigDecimal(String value) {
@@ -393,7 +442,7 @@ final class OrriDatabase {
             throw new SQLException("Relation " + relationName + " does not contain any columns");
         }
 
-        String createSql = buildCreateTableSql(relationName, columnNames, columnTypes);
+        String createSql = buildCreateTableSql(relationName, columnNames, columnTypes, rows);
         try (Statement statement = connection.createStatement()) {
             statement.execute(createSql);
         }
@@ -415,13 +464,38 @@ final class OrriDatabase {
     }
 
     private static String buildCreateTableSql(
-            String relationName, List<String> columnNames, List<ColumnType> columnTypes) {
+            String relationName, List<String> columnNames, List<ColumnType> columnTypes, List<List<Object>> rows) {
         List<String> definitions = new ArrayList<>(columnNames.size());
         for (int index = 0; index < columnNames.size(); index++) {
-            definitions.add(
-                    quote(columnNames.get(index)) + " " + columnTypes.get(index).ddlType());
+            definitions.add(quote(columnNames.get(index)) + " " + ddlType(columnTypes.get(index), rows, index));
         }
         return "CREATE TABLE " + quote(relationName) + " (" + String.join(", ", definitions) + ")";
+    }
+
+    private static String ddlType(ColumnType columnType, List<List<Object>> rows, int columnIndex) {
+        if (columnType != ColumnType.DECIMAL) {
+            return columnType.ddlType();
+        }
+
+        int maxIntegerDigits = 1;
+        int maxScale = 0;
+        for (List<Object> row : rows) {
+            if (columnIndex >= row.size() || !(row.get(columnIndex) instanceof BigDecimal value)) {
+                continue;
+            }
+
+            BigDecimal normalized = value.stripTrailingZeros();
+            if (normalized.scale() < 0) {
+                normalized = normalized.setScale(0);
+            }
+
+            maxScale = Math.max(maxScale, normalized.scale());
+            maxIntegerDigits = Math.max(maxIntegerDigits, normalized.precision() - normalized.scale());
+        }
+
+        int scale = Math.max(10, maxScale);
+        int precision = Math.max(38, maxIntegerDigits + scale);
+        return "DECIMAL(" + precision + ", " + scale + ")";
     }
 
     private static String buildInsertSql(String relationName, List<String> columnNames) {
