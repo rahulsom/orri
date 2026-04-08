@@ -649,8 +649,8 @@ Use a service account or an OAuth access token for private spreadsheets.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight"><code data-lang="java"><span class="nc">Properties</span> <span class="n">properties</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Properties</span><span class="o">();</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"apiKey"</span><span class="o">,</span> <span class="s">"your-google-api-key"</span><span class="o">);</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"readOnly"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">API_KEY_PROPERTY</span><span class="o">,</span> <span class="s">"your-google-api-key"</span><span class="o">);</span>
+<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">READ_ONLY_PROPERTY</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
 
 <span class="k">return</span> <span class="n">driver</span><span class="o">.</span><span class="na">connect</span><span class="o">(</span><span class="no">SPREADSHEET_URL</span><span class="o">,</span> <span class="n">properties</span><span class="o">);</span></code></pre>
 </div>
@@ -661,7 +661,7 @@ Use a service account or an OAuth access token for private spreadsheets.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight"><code data-lang="java"><span class="nc">Properties</span> <span class="n">properties</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Properties</span><span class="o">();</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"credentialsFile"</span><span class="o">,</span> <span class="s">"/path/to/service-account.json"</span><span class="o">);</span>
+<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">CREDENTIALS_FILE_PROPERTY</span><span class="o">,</span> <span class="s">"/path/to/service-account.json"</span><span class="o">);</span>
 
 <span class="k">return</span> <span class="n">driver</span><span class="o">.</span><span class="na">connect</span><span class="o">(</span><span class="no">SPREADSHEET_URL</span><span class="o">,</span> <span class="n">properties</span><span class="o">);</span></code></pre>
 </div>
@@ -682,8 +682,8 @@ The service account must have access to the target spreadsheet.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="rouge highlight"><code data-lang="java"><span class="nc">Properties</span> <span class="n">properties</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Properties</span><span class="o">();</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"apiKey"</span><span class="o">,</span> <span class="s">"your-google-api-key"</span><span class="o">);</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="s">"readOnly"</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">API_KEY_PROPERTY</span><span class="o">,</span> <span class="s">"your-google-api-key"</span><span class="o">);</span>
+<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">READ_ONLY_PROPERTY</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
 
 <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">relations</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
 <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">columns</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
@@ -692,10 +692,10 @@ The service account must have access to the target spreadsheet.</p>
 
     <span class="k">try</span> <span class="o">(</span><span class="nc">ResultSet</span> <span class="n">tables</span> <span class="o">=</span> <span class="n">metaData</span><span class="o">.</span><span class="na">getTables</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="s">"%"</span><span class="o">,</span> <span class="kc">null</span><span class="o">))</span> <span class="o">{</span>
         <span class="k">while</span> <span class="o">(</span><span class="n">tables</span><span class="o">.</span><span class="na">next</span><span class="o">())</span> <span class="o">{</span>
-            <span class="nc">String</span> <span class="n">schemaName</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="s">"TABLE_SCHEM"</span><span class="o">);</span>
-            <span class="nc">String</span> <span class="n">tableName</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="s">"TABLE_NAME"</span><span class="o">);</span>
-            <span class="nc">String</span> <span class="n">tableType</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="s">"TABLE_TYPE"</span><span class="o">);</span>
-            <span class="k">if</span> <span class="o">(!</span><span class="s">"INFORMATION_SCHEMA"</span><span class="o">.</span><span class="na">equalsIgnoreCase</span><span class="o">(</span><span class="n">schemaName</span><span class="o">))</span> <span class="o">{</span>
+            <span class="nc">String</span> <span class="n">schemaName</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">TABLE_SCHEMA_COLUMN</span><span class="o">);</span>
+            <span class="nc">String</span> <span class="n">tableName</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">TABLE_NAME_COLUMN</span><span class="o">);</span>
+            <span class="nc">String</span> <span class="n">tableType</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">TABLE_TYPE_COLUMN</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="nc">Constants</span><span class="o">.</span><span class="na">INFORMATION_SCHEMA</span><span class="o">.</span><span class="na">equalsIgnoreCase</span><span class="o">(</span><span class="n">schemaName</span><span class="o">))</span> <span class="o">{</span>
                 <span class="n">relations</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">tableName</span> <span class="o">+</span> <span class="s">" ("</span> <span class="o">+</span> <span class="n">normalizeTableType</span><span class="o">(</span><span class="n">tableType</span><span class="o">)</span> <span class="o">+</span> <span class="s">")"</span><span class="o">);</span>
             <span class="o">}</span>
         <span class="o">}</span>
