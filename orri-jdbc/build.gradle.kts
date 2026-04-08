@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    id("com.github.rahulsom.waena.published")
+    alias(libs.plugins.waena.published)
 }
 
 description = "JDBC driver for querying and modifying Google Sheets as tables and views."
