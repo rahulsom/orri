@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.google.auth.http)
     implementation(libs.google.sheets)
     implementation(libs.h2)
+    testImplementation(libs.assertj)
     testImplementation(libs.google.oauth.client.jetty)
 }
 

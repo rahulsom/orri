@@ -1,10 +1,7 @@
 package io.github.rahulsom.orri;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -27,8 +24,8 @@ class OrriDriverTest {
     void acceptsOrriUrls() {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), noOpSynchronizer());
 
-        assertTrue(driver.acceptsURL("jdbc:orri:spreadsheet-id"));
-        assertFalse(driver.acceptsURL("jdbc:h2:mem:test"));
+        assertThat(driver.acceptsURL("jdbc:orri:spreadsheet-id")).isTrue();
+        assertThat(driver.acceptsURL("jdbc:h2:mem:test")).isFalse();
     }
 
     @Test
@@ -37,10 +34,10 @@ class OrriDriverTest {
 
         DriverPropertyInfo[] propertyInfos = driver.getPropertyInfo("jdbc:orri:test", new Properties());
 
-        assertEquals(6, propertyInfos.length);
-        assertEquals("apiKey", propertyInfos[0].name);
-        assertEquals("readOnly", propertyInfos[4].name);
-        assertEquals("applicationName", propertyInfos[5].name);
+        assertThat(propertyInfos).hasSize(6);
+        assertThat(propertyInfos[0].name).isEqualTo("apiKey");
+        assertThat(propertyInfos[4].name).isEqualTo("readOnly");
+        assertThat(propertyInfos[5].name).isEqualTo("applicationName");
     }
 
     @Test
@@ -48,37 +45,37 @@ class OrriDriverTest {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), noOpSynchronizer());
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", new Properties())) {
-            assertNotNull(connection);
-            assertFalse(connection.isReadOnly());
+            assertThat(connection).isNotNull();
+            assertThat(connection.isReadOnly()).isFalse();
 
             try (ResultSet resultSet = connection
                     .createStatement()
                     .executeQuery("select \"Name\", \"Active\", \"Points\" from \"Employees\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Alice", resultSet.getString(1));
-                assertTrue(resultSet.getBoolean(2));
-                assertEquals(new BigDecimal("10.5000000000"), resultSet.getBigDecimal(3));
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Alice");
+                assertThat(resultSet.getBoolean(2)).isTrue();
+                assertThat(resultSet.getBigDecimal(3)).isEqualTo(new BigDecimal("10.5000000000"));
 
-                assertTrue(resultSet.next());
-                assertEquals("Bob", resultSet.getString(1));
-                assertFalse(resultSet.getBoolean(2));
-                assertEquals(new BigDecimal("7.2500000000"), resultSet.getBigDecimal(3));
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Bob");
+                assertThat(resultSet.getBoolean(2)).isFalse();
+                assertThat(resultSet.getBigDecimal(3)).isEqualTo(new BigDecimal("7.2500000000"));
 
-                assertTrue(resultSet.next());
-                assertEquals("Carol", resultSet.getString(1));
-                assertTrue(resultSet.getBoolean(2));
-                assertNull(resultSet.getBigDecimal(3));
-                assertFalse(resultSet.next());
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Carol");
+                assertThat(resultSet.getBoolean(2)).isTrue();
+                assertThat(resultSet.getBigDecimal(3)).isNull();
+                assertThat(resultSet.next()).isFalse();
             }
 
             try (ResultSet resultSet = connection
                     .createStatement()
                     .executeQuery("select \"Name\" from \"Active Employees\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Alice", resultSet.getString(1));
-                assertTrue(resultSet.next());
-                assertEquals("Carol", resultSet.getString(1));
-                assertFalse(resultSet.next());
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Alice");
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Carol");
+                assertThat(resultSet.next()).isFalse();
             }
         }
     }
@@ -89,17 +86,17 @@ class OrriDriverTest {
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", new Properties())) {
             DatabaseMetaData metaData = connection.getMetaData();
-            assertEquals("jdbc:orri:test-sheet", metaData.getURL());
+            assertThat(metaData.getURL()).isEqualTo("jdbc:orri:test-sheet");
 
             try (ResultSet tables = metaData.getTables(null, null, null, null)) {
                 boolean foundView = false;
                 while (tables.next()) {
                     if ("Active Employees".equals(tables.getString("TABLE_NAME"))) {
                         foundView = true;
-                        assertEquals("VIEW", tables.getString("TABLE_TYPE"));
+                        assertThat(tables.getString("TABLE_TYPE")).isEqualTo("VIEW");
                     }
                 }
-                assertTrue(foundView);
+                assertThat(foundView).isTrue();
             }
         }
     }
@@ -112,24 +109,25 @@ class OrriDriverTest {
             try (ResultSet resultSet = connection
                     .createStatement()
                     .executeQuery("select \"Date\", \"Time\", \"Timestamp\" from \"Schedule\"")) {
-                assertTrue(resultSet.next());
-                assertEquals(LocalDate.of(2026, 4, 7), resultSet.getObject(1, LocalDate.class));
-                assertEquals(LocalTime.of(9, 15, 30), resultSet.getObject(2, LocalTime.class));
-                assertEquals(LocalDateTime.of(2026, 4, 7, 9, 15, 30), resultSet.getObject(3, LocalDateTime.class));
-                assertFalse(resultSet.next());
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getObject(1, LocalDate.class)).isEqualTo(LocalDate.of(2026, 4, 7));
+                assertThat(resultSet.getObject(2, LocalTime.class)).isEqualTo(LocalTime.of(9, 15, 30));
+                assertThat(resultSet.getObject(3, LocalDateTime.class))
+                        .isEqualTo(LocalDateTime.of(2026, 4, 7, 9, 15, 30));
+                assertThat(resultSet.next()).isFalse();
             }
 
             try (ResultSet columns = connection.getMetaData().getColumns(null, null, "Schedule", "%")) {
-                assertTrue(columns.next());
-                assertEquals("Date", columns.getString("COLUMN_NAME"));
-                assertEquals(Types.DATE, columns.getInt("DATA_TYPE"));
-                assertTrue(columns.next());
-                assertEquals("Time", columns.getString("COLUMN_NAME"));
-                assertEquals(Types.TIME, columns.getInt("DATA_TYPE"));
-                assertTrue(columns.next());
-                assertEquals("Timestamp", columns.getString("COLUMN_NAME"));
-                assertEquals(Types.TIMESTAMP, columns.getInt("DATA_TYPE"));
-                assertFalse(columns.next());
+                assertThat(columns.next()).isTrue();
+                assertThat(columns.getString("COLUMN_NAME")).isEqualTo("Date");
+                assertThat(columns.getInt("DATA_TYPE")).isEqualTo(Types.DATE);
+                assertThat(columns.next()).isTrue();
+                assertThat(columns.getString("COLUMN_NAME")).isEqualTo("Time");
+                assertThat(columns.getInt("DATA_TYPE")).isEqualTo(Types.TIME);
+                assertThat(columns.next()).isTrue();
+                assertThat(columns.getString("COLUMN_NAME")).isEqualTo("Timestamp");
+                assertThat(columns.getInt("DATA_TYPE")).isEqualTo(Types.TIMESTAMP);
+                assertThat(columns.next()).isFalse();
             }
         }
     }
@@ -140,9 +138,9 @@ class OrriDriverTest {
                 "jdbc:orri:spreadsheet-id;apiKey=url-key",
                 properties("applicationName", "test-app", "apiKey", "property-key"));
 
-        assertEquals("spreadsheet-id", jdbcUrl.spreadsheetId());
-        assertEquals("property-key", jdbcUrl.property("apiKey"));
-        assertEquals("test-app", jdbcUrl.applicationName());
+        assertThat(jdbcUrl.spreadsheetId()).isEqualTo("spreadsheet-id");
+        assertThat(jdbcUrl.property("apiKey")).isEqualTo("property-key");
+        assertThat(jdbcUrl.applicationName()).isEqualTo("test-app");
     }
 
     @Test
@@ -151,48 +149,46 @@ class OrriDriverTest {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
-            assertFalse(connection.isReadOnly());
+            assertThat(connection.isReadOnly()).isFalse();
 
-            assertEquals(
-                    1,
-                    connection
+            assertThat(
+                            connection
+                                    .createStatement()
+                                    .executeUpdate(
+                                            "insert into \"Employees\" (\"Name\", \"Active\", \"Points\") values ('Dave', true, 2.5)"))
+                    .isEqualTo(1);
+            assertThat(connection
                             .createStatement()
-                            .executeUpdate(
-                                    "insert into \"Employees\" (\"Name\", \"Active\", \"Points\") values ('Dave', true, 2.5)"));
-            assertEquals(
-                    1,
-                    connection
-                            .createStatement()
-                            .executeUpdate("update \"Employees\" set \"Active\" = true where \"Name\" = 'Bob'"));
-            assertEquals(
-                    1,
-                    connection.createStatement().executeUpdate("delete from \"Employees\" where \"Name\" = 'Carol'"));
+                            .executeUpdate("update \"Employees\" set \"Active\" = true where \"Name\" = 'Bob'"))
+                    .isEqualTo(1);
+            assertThat(connection.createStatement().executeUpdate("delete from \"Employees\" where \"Name\" = 'Carol'"))
+                    .isEqualTo(1);
 
             try (ResultSet resultSet =
                     connection.createStatement().executeQuery("select \"Name\" from \"Employees\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Alice", resultSet.getString(1));
-                assertTrue(resultSet.next());
-                assertEquals("Bob", resultSet.getString(1));
-                assertTrue(resultSet.next());
-                assertEquals("Dave", resultSet.getString(1));
-                assertFalse(resultSet.next());
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Alice");
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Bob");
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Dave");
+                assertThat(resultSet.next()).isFalse();
             }
 
             try (ResultSet resultSet = connection
                     .createStatement()
                     .executeQuery("select \"Name\" from \"Active Employees\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Alice", resultSet.getString(1));
-                assertTrue(resultSet.next());
-                assertEquals("Bob", resultSet.getString(1));
-                assertTrue(resultSet.next());
-                assertEquals("Dave", resultSet.getString(1));
-                assertFalse(resultSet.next());
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Alice");
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Bob");
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Dave");
+                assertThat(resultSet.next()).isFalse();
             }
         }
 
-        assertEquals(List.of("Employees", "Employees", "Employees"), synchronizer.syncedWorksheets);
+        assertThat(synchronizer.syncedWorksheets).isEqualTo(List.of("Employees", "Employees", "Employees"));
     }
 
     @Test
@@ -201,11 +197,12 @@ class OrriDriverTest {
 
         try (Connection connection =
                 driver.connect("jdbc:orri:test-sheet;readOnly=true", properties("accessToken", "token"))) {
-            assertTrue(connection.isReadOnly());
-            SQLException exception = org.junit.jupiter.api.Assertions.assertThrows(SQLException.class, () -> connection
-                    .createStatement()
-                    .executeUpdate("delete from \"Employees\" where \"Name\" = 'Alice'"));
-            assertTrue(exception.getMessage().contains("read-only"));
+            assertThat(connection.isReadOnly()).isTrue();
+            assertThatThrownBy(() -> connection
+                            .createStatement()
+                            .executeUpdate("delete from \"Employees\" where \"Name\" = 'Alice'"))
+                    .isInstanceOf(SQLException.class)
+                    .hasMessageContaining("read-only");
         }
     }
 
@@ -223,8 +220,8 @@ class OrriDriverTest {
                     )
                     """);
 
-            assertEquals(List.of("Projects"), synchronizer.createdWorksheets);
-            assertEquals(0, rowCount(connection, "Projects"));
+            assertThat(synchronizer.createdWorksheets).isEqualTo(List.of("Projects"));
+            assertThat(rowCount(connection, "Projects")).isZero();
         }
     }
 
@@ -242,18 +239,17 @@ class OrriDriverTest {
                     order by "Name"
                     """);
 
-            assertEquals(List.of("Active By Name"), synchronizer.createdFilterViews);
-            assertEquals(
-                    List.of(new FilterCriterion(1, List.of("FALSE", "false"), null, List.of())),
-                    synchronizer.createdFilterViewDefinitions.getFirst().criteria());
+            assertThat(synchronizer.createdFilterViews).isEqualTo(List.of("Active By Name"));
+            assertThat(synchronizer.createdFilterViewDefinitions.getFirst().criteria())
+                    .isEqualTo(List.of(new FilterCriterion(1, List.of("FALSE", "false"), null, List.of())));
             try (ResultSet resultSet = connection
                     .createStatement()
                     .executeQuery("select \"Name\" from \"Active By Name\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Alice", resultSet.getString(1));
-                assertTrue(resultSet.next());
-                assertEquals("Carol", resultSet.getString(1));
-                assertFalse(resultSet.next());
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Alice");
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Carol");
+                assertThat(resultSet.next()).isFalse();
             }
         }
     }
@@ -264,15 +260,14 @@ class OrriDriverTest {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
-            assertFalse(connection.createStatement().execute("drop table \"Employees\""));
-
-            SQLException exception = org.junit.jupiter.api.Assertions.assertThrows(
-                    SQLException.class, () -> connection.createStatement().executeQuery("select * from \"Employees\""));
-            assertNotNull(exception);
+            assertThat(connection.createStatement().execute("drop table \"Employees\""))
+                    .isFalse();
+            assertThatThrownBy(() -> connection.createStatement().executeQuery("select * from \"Employees\""))
+                    .isInstanceOf(SQLException.class);
         }
 
-        assertEquals(List.of("Active Employees"), synchronizer.deletedFilterViews);
-        assertEquals(List.of("Employees"), synchronizer.deletedWorksheets);
+        assertThat(synchronizer.deletedFilterViews).isEqualTo(List.of("Active Employees"));
+        assertThat(synchronizer.deletedWorksheets).isEqualTo(List.of("Employees"));
     }
 
     @Test
@@ -281,15 +276,13 @@ class OrriDriverTest {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
-            assertFalse(connection.createStatement().execute("drop view \"Active Employees\""));
-
-            SQLException exception = org.junit.jupiter.api.Assertions.assertThrows(
-                    SQLException.class,
-                    () -> connection.createStatement().executeQuery("select * from \"Active Employees\""));
-            assertNotNull(exception);
+            assertThat(connection.createStatement().execute("drop view \"Active Employees\""))
+                    .isFalse();
+            assertThatThrownBy(() -> connection.createStatement().executeQuery("select * from \"Active Employees\""))
+                    .isInstanceOf(SQLException.class);
         }
 
-        assertEquals(List.of("Active Employees"), synchronizer.deletedFilterViews);
+        assertThat(synchronizer.deletedFilterViews).isEqualTo(List.of("Active Employees"));
     }
 
     @Test
@@ -298,19 +291,21 @@ class OrriDriverTest {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
-            assertFalse(connection.createStatement().execute("alter table \"Employees\" rename to \"People\""));
+            assertThat(connection.createStatement().execute("alter table \"Employees\" rename to \"People\""))
+                    .isFalse();
 
             try (ResultSet resultSet =
                     connection.createStatement().executeQuery("select \"Name\" from \"People\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Alice", resultSet.getString(1));
-                assertTrue(resultSet.next());
-                assertEquals("Bob", resultSet.getString(1));
-                assertFalse(connection.createStatement().execute("drop view \"Active Employees\""));
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Alice");
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Bob");
+                assertThat(connection.createStatement().execute("drop view \"Active Employees\""))
+                        .isFalse();
             }
         }
 
-        assertEquals(List.of("Employees->People"), synchronizer.renamedWorksheets);
+        assertThat(synchronizer.renamedWorksheets).isEqualTo(List.of("Employees->People"));
     }
 
     @Test
@@ -319,20 +314,21 @@ class OrriDriverTest {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbookWithoutViews(), synchronizer);
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
-            assertFalse(connection
-                    .createStatement()
-                    .execute("alter table \"Employees\" alter column \"Points\" rename to \"Score\""));
+            assertThat(connection
+                            .createStatement()
+                            .execute("alter table \"Employees\" alter column \"Points\" rename to \"Score\""))
+                    .isFalse();
 
             try (ResultSet resultSet = connection
                     .createStatement()
                     .executeQuery("select \"Name\", \"Score\" from \"Employees\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Alice", resultSet.getString(1));
-                assertEquals(new BigDecimal("10.5000000000"), resultSet.getBigDecimal(2));
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Alice");
+                assertThat(resultSet.getBigDecimal(2)).isEqualTo(new BigDecimal("10.5000000000"));
             }
         }
 
-        assertEquals(List.of("Employees"), synchronizer.syncedWorksheets);
+        assertThat(synchronizer.syncedWorksheets).isEqualTo(List.of("Employees"));
     }
 
     @Test
@@ -341,22 +337,23 @@ class OrriDriverTest {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
-            assertFalse(connection
-                    .createStatement()
-                    .execute("alter view \"Active Employees\" rename to \"Enabled Employees\""));
+            assertThat(connection
+                            .createStatement()
+                            .execute("alter view \"Active Employees\" rename to \"Enabled Employees\""))
+                    .isFalse();
 
             try (ResultSet resultSet = connection
                     .createStatement()
                     .executeQuery("select \"Name\" from \"Enabled Employees\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Alice", resultSet.getString(1));
-                assertTrue(resultSet.next());
-                assertEquals("Carol", resultSet.getString(1));
-                assertFalse(resultSet.next());
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Alice");
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Carol");
+                assertThat(resultSet.next()).isFalse();
             }
         }
 
-        assertEquals(List.of("Active Employees->Enabled Employees"), synchronizer.updatedFilterViews);
+        assertThat(synchronizer.updatedFilterViews).isEqualTo(List.of("Active Employees->Enabled Employees"));
     }
 
     @Test
@@ -365,26 +362,25 @@ class OrriDriverTest {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
         try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
-            assertFalse(connection.createStatement().execute("""
-                    alter view "Active Employees" as
-                    select "Name"
-                    from "Employees"
-                    where "Name" = 'Bob'
-                    """));
+            assertThat(connection.createStatement().execute("""
+                            alter view "Active Employees" as
+                            select "Name"
+                            from "Employees"
+                            where "Name" = 'Bob'
+                            """)).isFalse();
 
             try (ResultSet resultSet = connection
                     .createStatement()
                     .executeQuery("select \"Name\" from \"Active Employees\" order by \"Name\"")) {
-                assertTrue(resultSet.next());
-                assertEquals("Bob", resultSet.getString(1));
-                assertFalse(resultSet.next());
+                assertThat(resultSet.next()).isTrue();
+                assertThat(resultSet.getString(1)).isEqualTo("Bob");
+                assertThat(resultSet.next()).isFalse();
             }
         }
 
-        assertEquals(List.of("Active Employees->Active Employees"), synchronizer.updatedFilterViews);
-        assertEquals(
-                List.of(new FilterCriterion(0, List.of(), "TEXT_EQ", List.of("Bob"))),
-                synchronizer.updatedFilterViewDefinitions.getFirst().criteria());
+        assertThat(synchronizer.updatedFilterViews).isEqualTo(List.of("Active Employees->Active Employees"));
+        assertThat(synchronizer.updatedFilterViewDefinitions.getFirst().criteria())
+                .isEqualTo(List.of(new FilterCriterion(0, List.of(), "TEXT_EQ", List.of("Bob"))));
     }
 
     @Test
@@ -405,19 +401,17 @@ class OrriDriverTest {
 
             WorksheetSnapshot snapshot = OrriDatabase.readWorksheetSnapshot(connection, "Schedule", 42);
 
-            assertEquals(List.of(ColumnType.DATE, ColumnType.TIME, ColumnType.TIMESTAMP), snapshot.columnTypes());
-            assertEquals(
-                    LocalDate.of(2026, 4, 7),
-                    SheetsTemporalSupport.asLocalDate(
-                            snapshot.rows().getFirst().cells().get(0).typedValue()));
-            assertEquals(
-                    LocalTime.of(9, 15, 30),
-                    SheetsTemporalSupport.asLocalTime(
-                            snapshot.rows().getFirst().cells().get(1).typedValue()));
-            assertEquals(
-                    LocalDateTime.of(2026, 4, 7, 9, 15, 30),
-                    SheetsTemporalSupport.asLocalDateTime(
-                            snapshot.rows().getFirst().cells().get(2).typedValue()));
+            assertThat(snapshot.columnTypes())
+                    .isEqualTo(List.of(ColumnType.DATE, ColumnType.TIME, ColumnType.TIMESTAMP));
+            assertThat(SheetsTemporalSupport.asLocalDate(
+                            snapshot.rows().getFirst().cells().get(0).typedValue()))
+                    .isEqualTo(LocalDate.of(2026, 4, 7));
+            assertThat(SheetsTemporalSupport.asLocalTime(
+                            snapshot.rows().getFirst().cells().get(1).typedValue()))
+                    .isEqualTo(LocalTime.of(9, 15, 30));
+            assertThat(SheetsTemporalSupport.asLocalDateTime(
+                            snapshot.rows().getFirst().cells().get(2).typedValue()))
+                    .isEqualTo(LocalDateTime.of(2026, 4, 7, 9, 15, 30));
         }
     }
 
@@ -495,7 +489,7 @@ class OrriDriverTest {
     private static int rowCount(Connection connection, String relationName) throws Exception {
         try (ResultSet resultSet =
                 connection.createStatement().executeQuery("select count(*) from \"" + relationName + "\"")) {
-            assertTrue(resultSet.next());
+            assertThat(resultSet.next()).isTrue();
             return resultSet.getInt(1);
         }
     }
