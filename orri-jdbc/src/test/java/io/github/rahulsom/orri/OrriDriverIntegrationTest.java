@@ -29,12 +29,12 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
+@EnabledIfSystemProperty(named = "orri.integration", matches = "true")
 class OrriDriverIntegrationTest {
     private static final GsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String DEFAULT_SPREADSHEET_ID = "1yRm-oPjuUGvfy4uhGc-woytgXQ7nSpxalWVX9djruSQ";
 
     @Test
-    @EnabledIfSystemProperty(named = "orri.integration", matches = "true")
     void performsEndToEndLifecycleAgainstOrri() throws Exception {
         Path clientSecretPath = resourcePath("local/google-secret.json");
         String accessToken = authorize(clientSecretPath);
@@ -207,7 +207,6 @@ class OrriDriverIntegrationTest {
     }
 
     @Test
-    @EnabledIfSystemProperty(named = "orri.integration", matches = "true")
     void createsAndQueriesTemporalWorksheetAgainstOrri() throws Exception {
         Path clientSecretPath = resourcePath("local/google-secret.json");
         String accessToken = authorize(clientSecretPath);
