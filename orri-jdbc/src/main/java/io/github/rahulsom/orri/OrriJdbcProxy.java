@@ -325,7 +325,7 @@ final class OrriJdbcProxy {
 
         private void renameLocalRelation(String relationName, String newName) throws SQLException {
             String relationType = relationType(relationName);
-            String alterStatement = "VIEW".equalsIgnoreCase(relationType)
+            String alterStatement = Constants.VIEW_RELATION_TYPE.equalsIgnoreCase(relationType)
                     ? "alter view " + quote(relationName) + " rename to " + quote(newName)
                     : "alter table " + quote(relationName) + " rename to " + quote(newName);
             try (Statement statement = session.connection().createStatement()) {
@@ -336,9 +336,9 @@ final class OrriJdbcProxy {
         private String relationType(String relationName) throws SQLException {
             try (ResultSet tables = session.connection().getMetaData().getTables(null, null, relationName, null)) {
                 while (tables.next()) {
-                    String schemaName = tables.getString("TABLE_SCHEM");
-                    if (!"INFORMATION_SCHEMA".equalsIgnoreCase(schemaName)) {
-                        return tables.getString("TABLE_TYPE");
+                    String schemaName = tables.getString(Constants.TABLE_SCHEMA_COLUMN);
+                    if (!Constants.INFORMATION_SCHEMA.equalsIgnoreCase(schemaName)) {
+                        return tables.getString(Constants.TABLE_TYPE_COLUMN);
                     }
                 }
             }
@@ -476,8 +476,8 @@ final class OrriJdbcProxy {
         }
 
         while (rowSet.next()) {
-            if (viewNames.contains(rowSet.getString("TABLE_NAME"))) {
-                rowSet.updateString("TABLE_TYPE", "VIEW");
+            if (viewNames.contains(rowSet.getString(Constants.TABLE_NAME_COLUMN))) {
+                rowSet.updateString(Constants.TABLE_TYPE_COLUMN, Constants.VIEW_RELATION_TYPE);
                 rowSet.updateRow();
             }
         }
@@ -496,9 +496,9 @@ final class OrriJdbcProxy {
             types.add(rowSet.getString(1));
         }
 
-        if (!types.contains("VIEW")) {
+        if (!types.contains(Constants.VIEW_RELATION_TYPE)) {
             rowSet.moveToInsertRow();
-            rowSet.updateString(1, "VIEW");
+            rowSet.updateString(1, Constants.VIEW_RELATION_TYPE);
             rowSet.insertRow();
             rowSet.moveToCurrentRow();
         }

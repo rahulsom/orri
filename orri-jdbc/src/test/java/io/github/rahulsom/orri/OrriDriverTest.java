@@ -35,9 +35,9 @@ class OrriDriverTest {
         DriverPropertyInfo[] propertyInfos = driver.getPropertyInfo("jdbc:orri:test", new Properties());
 
         assertThat(propertyInfos).hasSize(6);
-        assertThat(propertyInfos[0].name).isEqualTo("apiKey");
-        assertThat(propertyInfos[4].name).isEqualTo("readOnly");
-        assertThat(propertyInfos[5].name).isEqualTo("applicationName");
+        assertThat(propertyInfos[0].name).isEqualTo(Constants.API_KEY_PROPERTY);
+        assertThat(propertyInfos[4].name).isEqualTo(Constants.READ_ONLY_PROPERTY);
+        assertThat(propertyInfos[5].name).isEqualTo(Constants.APPLICATION_NAME_PROPERTY);
     }
 
     @Test
@@ -91,9 +91,10 @@ class OrriDriverTest {
             try (ResultSet tables = metaData.getTables(null, null, null, null)) {
                 boolean foundView = false;
                 while (tables.next()) {
-                    if ("Active Employees".equals(tables.getString("TABLE_NAME"))) {
+                    if ("Active Employees".equals(tables.getString(Constants.TABLE_NAME_COLUMN))) {
                         foundView = true;
-                        assertThat(tables.getString("TABLE_TYPE")).isEqualTo("VIEW");
+                        assertThat(tables.getString(Constants.TABLE_TYPE_COLUMN))
+                                .isEqualTo(Constants.VIEW_RELATION_TYPE);
                     }
                 }
                 assertThat(foundView).isTrue();
@@ -135,11 +136,12 @@ class OrriDriverTest {
     @Test
     void parsesConnectionPropertiesFromUrlAndProperties() throws Exception {
         OrriJdbcUrl jdbcUrl = OrriJdbcUrl.parse(
-                "jdbc:orri:spreadsheet-id;apiKey=url-key",
-                properties("applicationName", "test-app", "apiKey", "property-key"));
+                "jdbc:orri:spreadsheet-id;" + Constants.API_KEY_PROPERTY + "=url-key",
+                properties(
+                        Constants.APPLICATION_NAME_PROPERTY, "test-app", Constants.API_KEY_PROPERTY, "property-key"));
 
         assertThat(jdbcUrl.spreadsheetId()).isEqualTo("spreadsheet-id");
-        assertThat(jdbcUrl.property("apiKey")).isEqualTo("property-key");
+        assertThat(jdbcUrl.property(Constants.API_KEY_PROPERTY)).isEqualTo("property-key");
         assertThat(jdbcUrl.applicationName()).isEqualTo("test-app");
     }
 
@@ -148,7 +150,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             assertThat(connection.isReadOnly()).isFalse();
 
             assertThat(
@@ -195,8 +198,9 @@ class OrriDriverTest {
     void rejectsWritesWhenConnectionIsReadOnly() throws Exception {
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), noOpSynchronizer());
 
-        try (Connection connection =
-                driver.connect("jdbc:orri:test-sheet;readOnly=true", properties("accessToken", "token"))) {
+        try (Connection connection = driver.connect(
+                "jdbc:orri:test-sheet;" + Constants.READ_ONLY_PROPERTY + "=true",
+                properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             assertThat(connection.isReadOnly()).isTrue();
             assertThatThrownBy(() -> connection
                             .createStatement()
@@ -211,7 +215,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             connection.createStatement().execute("""
                     create table "Projects" (
                         "Name" varchar,
@@ -230,7 +235,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             connection.createStatement().execute("""
                     create view "Active By Name" as
                     select "Name", "Active"
@@ -259,7 +265,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             assertThat(connection.createStatement().execute("drop table \"Employees\""))
                     .isFalse();
             assertThatThrownBy(() -> connection.createStatement().executeQuery("select * from \"Employees\""))
@@ -275,7 +282,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             assertThat(connection.createStatement().execute("drop view \"Active Employees\""))
                     .isFalse();
             assertThatThrownBy(() -> connection.createStatement().executeQuery("select * from \"Active Employees\""))
@@ -290,7 +298,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             assertThat(connection.createStatement().execute("alter table \"Employees\" rename to \"People\""))
                     .isFalse();
 
@@ -313,7 +322,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbookWithoutViews(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             assertThat(connection
                             .createStatement()
                             .execute("alter table \"Employees\" alter column \"Points\" rename to \"Score\""))
@@ -336,7 +346,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             assertThat(connection
                             .createStatement()
                             .execute("alter view \"Active Employees\" rename to \"Enabled Employees\""))
@@ -361,7 +372,8 @@ class OrriDriverTest {
         RecordingSynchronizer synchronizer = new RecordingSynchronizer();
         OrriDriver driver = new OrriDriver(unusedUrl -> workbook(), synchronizer);
 
-        try (Connection connection = driver.connect("jdbc:orri:test-sheet", properties("accessToken", "token"))) {
+        try (Connection connection =
+                driver.connect("jdbc:orri:test-sheet", properties(Constants.ACCESS_TOKEN_PROPERTY, "token"))) {
             assertThat(connection.createStatement().execute("""
                             alter view "Active Employees" as
                             select "Name"

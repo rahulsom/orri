@@ -46,8 +46,8 @@ class OrriDriverIntegrationTest {
         String renamedViewName = "Integration Renamed View " + suffix;
 
         Properties properties = new Properties();
-        properties.setProperty("accessToken", accessToken);
-        properties.setProperty("applicationName", "orri-integration-test");
+        properties.setProperty(Constants.ACCESS_TOKEN_PROPERTY, accessToken);
+        properties.setProperty(Constants.APPLICATION_NAME_PROPERTY, "orri-integration-test");
 
         try (Connection connection = new OrriDriver().connect("jdbc:orri:" + spreadsheetId(), properties);
                 Statement statement = connection.createStatement()) {
@@ -215,8 +215,8 @@ class OrriDriverIntegrationTest {
         String tableName = "Integration Temporal_" + suffix;
 
         Properties properties = new Properties();
-        properties.setProperty("accessToken", accessToken);
-        properties.setProperty("applicationName", "orri-integration-test");
+        properties.setProperty(Constants.ACCESS_TOKEN_PROPERTY, accessToken);
+        properties.setProperty(Constants.APPLICATION_NAME_PROPERTY, "orri-integration-test");
 
         try {
             try (Connection connection = new OrriDriver().connect("jdbc:orri:" + spreadsheetId(), properties);

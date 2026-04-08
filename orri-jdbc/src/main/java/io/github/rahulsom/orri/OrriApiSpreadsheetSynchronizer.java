@@ -65,7 +65,7 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
             sheets.spreadsheets()
                     .values()
                     .update(url.spreadsheetId(), sheetRange + "!A1", valueRange)
-                    .setValueInputOption("USER_ENTERED")
+                    .setValueInputOption(Constants.USER_ENTERED_VALUE_INPUT_OPTION)
                     .execute();
 
             applyColumnFormats(sheets, url.spreadsheetId(), worksheet);
@@ -178,7 +178,7 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
                             .setProperties(new SheetProperties()
                                     .setSheetId(worksheet.sheetId())
                                     .setTitle(newName))
-                            .setFields("title"));
+                            .setFields(Constants.TITLE_FIELD));
             sheets.spreadsheets()
                     .batchUpdate(url.spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
                     .execute();
@@ -213,7 +213,7 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
             Request request = new Request()
                     .setUpdateFilterView(new UpdateFilterViewRequest()
                             .setFilter(googleFilterView)
-                            .setFields("title,range,criteria,sortSpecs"));
+                            .setFields(Constants.FILTER_VIEW_UPDATE_FIELDS));
             sheets.spreadsheets()
                     .batchUpdate(url.spreadsheetId(), new BatchUpdateSpreadsheetRequest().setRequests(List.of(request)))
                     .execute();
@@ -240,12 +240,12 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
     }
 
     private HttpRequestInitializer requestInitializer(OrriJdbcUrl url) throws IOException, SQLException {
-        String accessToken = url.property("accessToken");
+        String accessToken = url.property(Constants.ACCESS_TOKEN_PROPERTY);
         if (accessToken != null && !accessToken.isBlank()) {
             return request -> authorizeWithBearerToken(request, accessToken);
         }
 
-        String credentialsJson = url.property("credentialsJson");
+        String credentialsJson = url.property(Constants.CREDENTIALS_JSON_PROPERTY);
         if (credentialsJson != null && !credentialsJson.isBlank()) {
             try (InputStream inputStream = new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8))) {
                 GoogleCredentials credentials =
@@ -254,7 +254,7 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
             }
         }
 
-        String credentialsFile = url.property("credentialsFile");
+        String credentialsFile = url.property(Constants.CREDENTIALS_FILE_PROPERTY);
         if (credentialsFile != null && !credentialsFile.isBlank()) {
             try (InputStream inputStream = java.nio.file.Files.newInputStream(java.nio.file.Path.of(credentialsFile))) {
                 GoogleCredentials credentials =
@@ -263,7 +263,8 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
             }
         }
 
-        if (url.property("apiKey") != null && !url.property("apiKey").isBlank()) {
+        if (url.property(Constants.API_KEY_PROPERTY) != null
+                && !url.property(Constants.API_KEY_PROPERTY).isBlank()) {
             throw new SQLException("Writable connections require OAuth credentials or a service account");
         }
 
@@ -273,7 +274,7 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
     }
 
     private void authorizeWithBearerToken(HttpRequest request, String accessToken) {
-        request.getHeaders().setAuthorization("Bearer " + accessToken);
+        request.getHeaders().setAuthorization(Constants.AUTHORIZATION_BEARER_PREFIX + accessToken);
     }
 
     private List<List<Object>> loadWorksheetValues(Connection connection, WorksheetSnapshot worksheet)
@@ -343,7 +344,10 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
         return sortKeys.stream()
                 .map(sortKey -> new SortSpec()
                         .setDimensionIndex(sortKey.columnIndex())
-                        .setSortOrder(sortKey.descending() ? "DESCENDING" : "ASCENDING"))
+                        .setSortOrder(
+                                sortKey.descending()
+                                        ? Constants.DESCENDING_SORT_ORDER
+                                        : Constants.ASCENDING_SORT_ORDER))
                 .toList();
     }
 
@@ -374,7 +378,7 @@ final class OrriApiSpreadsheetSynchronizer implements SpreadsheetSynchronizer {
                                             .setNumberFormat(new NumberFormat()
                                                     .setType(numberFormatType)
                                                     .setPattern(pattern))))
-                            .setFields("userEnteredFormat.numberFormat")));
+                            .setFields(Constants.NUMBER_FORMAT_FIELDS)));
         }
 
         if (!requests.isEmpty()) {

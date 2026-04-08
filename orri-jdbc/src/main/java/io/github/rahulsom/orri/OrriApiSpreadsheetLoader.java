@@ -48,7 +48,7 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
             Sheets.Spreadsheets.Get request = sheets.spreadsheets().get(url.spreadsheetId());
             request.setIncludeGridData(true);
 
-            String apiKey = url.property("apiKey");
+            String apiKey = url.property(Constants.API_KEY_PROPERTY);
             if (apiKey != null && !apiKey.isBlank()) {
                 request.setKey(apiKey);
             }
@@ -68,12 +68,12 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
     }
 
     private HttpRequestInitializer requestInitializer(OrriJdbcUrl url) throws IOException {
-        String accessToken = url.property("accessToken");
+        String accessToken = url.property(Constants.ACCESS_TOKEN_PROPERTY);
         if (accessToken != null && !accessToken.isBlank()) {
             return request -> authorizeWithBearerToken(request, accessToken);
         }
 
-        String credentialsJson = url.property("credentialsJson");
+        String credentialsJson = url.property(Constants.CREDENTIALS_JSON_PROPERTY);
         if (credentialsJson != null && !credentialsJson.isBlank()) {
             try (InputStream inputStream = new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8))) {
                 GoogleCredentials credentials =
@@ -82,7 +82,7 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
             }
         }
 
-        String credentialsFile = url.property("credentialsFile");
+        String credentialsFile = url.property(Constants.CREDENTIALS_FILE_PROPERTY);
         if (credentialsFile != null && !credentialsFile.isBlank()) {
             try (InputStream inputStream = java.nio.file.Files.newInputStream(java.nio.file.Path.of(credentialsFile))) {
                 GoogleCredentials credentials =
@@ -91,7 +91,7 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
             }
         }
 
-        String apiKey = url.property("apiKey");
+        String apiKey = url.property(Constants.API_KEY_PROPERTY);
         if (apiKey != null && !apiKey.isBlank()) {
             return request -> {};
         }
@@ -102,7 +102,7 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
     }
 
     private void authorizeWithBearerToken(HttpRequest request, String accessToken) {
-        request.getHeaders().setAuthorization("Bearer " + accessToken);
+        request.getHeaders().setAuthorization(Constants.AUTHORIZATION_BEARER_PREFIX + accessToken);
     }
 
     private SpreadsheetSnapshot toSnapshot(Spreadsheet spreadsheet) throws SQLException {
@@ -215,7 +215,8 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
         if (filterView.getSortSpecs() != null) {
             for (SortSpec sortSpec : filterView.getSortSpecs()) {
                 sortKeys.add(new SortKey(
-                        sortSpec.getDimensionIndex(), "DESCENDING".equalsIgnoreCase(sortSpec.getSortOrder())));
+                        sortSpec.getDimensionIndex(),
+                        Constants.DESCENDING_SORT_ORDER.equalsIgnoreCase(sortSpec.getSortOrder())));
             }
         }
 

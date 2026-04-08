@@ -92,7 +92,7 @@ final class OrriDatabase {
             throws SQLException {
         for (FilterViewDefinition filterView : snapshot.filterViewsForWorksheet(worksheetName)) {
             String relationType = relationType(connection, filterView.name());
-            if ("VIEW".equalsIgnoreCase(relationType)) {
+            if (Constants.VIEW_RELATION_TYPE.equalsIgnoreCase(relationType)) {
                 // Locally created SQL views stay dynamic inside H2 and do not need rematerialization.
                 continue;
             }
@@ -106,9 +106,9 @@ final class OrriDatabase {
     private static String relationType(Connection connection, String relationName) throws SQLException {
         try (ResultSet tables = connection.getMetaData().getTables(null, null, relationName, null)) {
             while (tables.next()) {
-                String schemaName = tables.getString("TABLE_SCHEM");
-                if (!"INFORMATION_SCHEMA".equalsIgnoreCase(schemaName)) {
-                    return tables.getString("TABLE_TYPE");
+                String schemaName = tables.getString(Constants.TABLE_SCHEMA_COLUMN);
+                if (!Constants.INFORMATION_SCHEMA.equalsIgnoreCase(schemaName)) {
+                    return tables.getString(Constants.TABLE_TYPE_COLUMN);
                 }
             }
         }
