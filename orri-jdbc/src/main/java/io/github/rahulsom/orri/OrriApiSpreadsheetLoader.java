@@ -268,6 +268,9 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
             boolean sawValue = false;
             boolean allBoolean = true;
             boolean allNumbers = true;
+            boolean allDates = true;
+            boolean allTimes = true;
+            boolean allTimestamps = true;
 
             for (WorksheetRow row : rows) {
                 CellValue cell = row.cells().get(columnIndex);
@@ -278,12 +281,21 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
                 sawValue = true;
                 allBoolean &= isBooleanLike(cell);
                 allNumbers &= cell.kind() == ValueKind.NUMBER;
+                allDates &= cell.kind() == ValueKind.DATE;
+                allTimes &= cell.kind() == ValueKind.TIME;
+                allTimestamps &= cell.kind() == ValueKind.TIMESTAMP;
             }
 
             if (!sawValue) {
                 columnTypes.add(ColumnType.VARCHAR);
             } else if (allBoolean) {
                 columnTypes.add(ColumnType.BOOLEAN);
+            } else if (allDates) {
+                columnTypes.add(ColumnType.DATE);
+            } else if (allTimes) {
+                columnTypes.add(ColumnType.TIME);
+            } else if (allTimestamps) {
+                columnTypes.add(ColumnType.TIMESTAMP);
             } else if (allNumbers) {
                 columnTypes.add(ColumnType.DECIMAL);
             } else {
@@ -313,6 +325,11 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
 
         String formattedValue = cellData.getFormattedValue();
         ExtendedValue effectiveValue = cellData.getEffectiveValue();
+        ColumnType temporalType = temporalType(cellData);
+        if (temporalType != null && effectiveValue != null && effectiveValue.getNumberValue() != null) {
+            return SheetsTemporalSupport.fromSerial(effectiveValue.getNumberValue(), temporalType, formattedValue);
+        }
+
         if (isRenderedAsString(cellData) && formattedValue != null && !formattedValue.isBlank()) {
             return new CellValue(formattedValue, formattedValue, ValueKind.STRING);
         }
@@ -359,6 +376,16 @@ final class OrriApiSpreadsheetLoader implements SpreadsheetLoader {
             case "DATE", "DATE_TIME", "TIME", "TIME_DURATION" -> true;
             default -> false;
         };
+    }
+
+    private ColumnType temporalType(CellData cellData) {
+        NumberFormat numberFormat = cellData.getEffectiveFormat() == null
+                ? null
+                : cellData.getEffectiveFormat().getNumberFormat();
+        if (numberFormat == null) {
+            return null;
+        }
+        return SheetsTemporalSupport.columnType(numberFormat.getType());
     }
 
     private boolean isCheckboxCell(CellData cellData) {

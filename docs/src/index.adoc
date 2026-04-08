@@ -165,5 +165,9 @@ Columns are inferred from the worksheet contents.
 
 * Boolean columns map to JDBC booleans.
 * Numeric columns map to JDBC decimals.
+* Google Sheets `DATE` cells map to JDBC dates.
+* Google Sheets `TIME` cells map to JDBC times.
+* Google Sheets `DATE_TIME` cells map to JDBC timestamps.
+* If a checkbox column is used in Google Sheets, the driver exposes it as a boolean column when the rendered values are `true` and `false`.
 * All other columns map to JDBC strings.
 * If a checkbox column is used in Google Sheets, the driver exposes it as a boolean column when the rendered values are `true` and `false`.

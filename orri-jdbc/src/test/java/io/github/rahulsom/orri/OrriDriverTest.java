@@ -9,9 +9,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -95,6 +100,36 @@ class OrriDriverTest {
                     }
                 }
                 assertTrue(foundView);
+            }
+        }
+    }
+
+    @Test
+    void materializesTemporalColumns() throws Exception {
+        OrriDriver driver = new OrriDriver(unusedUrl -> temporalWorkbook(), noOpSynchronizer());
+
+        try (Connection connection = driver.connect("jdbc:orri:test-sheet", new Properties())) {
+            try (ResultSet resultSet = connection
+                    .createStatement()
+                    .executeQuery("select \"Date\", \"Time\", \"Timestamp\" from \"Schedule\"")) {
+                assertTrue(resultSet.next());
+                assertEquals(LocalDate.of(2026, 4, 7), resultSet.getObject(1, LocalDate.class));
+                assertEquals(LocalTime.of(9, 15, 30), resultSet.getObject(2, LocalTime.class));
+                assertEquals(LocalDateTime.of(2026, 4, 7, 9, 15, 30), resultSet.getObject(3, LocalDateTime.class));
+                assertFalse(resultSet.next());
+            }
+
+            try (ResultSet columns = connection.getMetaData().getColumns(null, null, "Schedule", "%")) {
+                assertTrue(columns.next());
+                assertEquals("Date", columns.getString("COLUMN_NAME"));
+                assertEquals(Types.DATE, columns.getInt("DATA_TYPE"));
+                assertTrue(columns.next());
+                assertEquals("Time", columns.getString("COLUMN_NAME"));
+                assertEquals(Types.TIME, columns.getInt("DATA_TYPE"));
+                assertTrue(columns.next());
+                assertEquals("Timestamp", columns.getString("COLUMN_NAME"));
+                assertEquals(Types.TIMESTAMP, columns.getInt("DATA_TYPE"));
+                assertFalse(columns.next());
             }
         }
     }
@@ -352,6 +387,40 @@ class OrriDriverTest {
                 synchronizer.updatedFilterViewDefinitions.getFirst().criteria());
     }
 
+    @Test
+    void readsTemporalWorksheetSnapshotFromJdbc() throws Exception {
+        try (Connection connection =
+                DriverManager.getConnection("jdbc:h2:mem:test-temporal;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false")) {
+            connection.createStatement().execute("""
+                    create table "Schedule" (
+                        "Date" date,
+                        "Time" time,
+                        "Timestamp" timestamp
+                    )
+                    """);
+            connection.createStatement().execute("""
+                    insert into "Schedule" values
+                    (DATE '2026-04-07', TIME '09:15:30', TIMESTAMP '2026-04-07 09:15:30')
+                    """);
+
+            WorksheetSnapshot snapshot = OrriDatabase.readWorksheetSnapshot(connection, "Schedule", 42);
+
+            assertEquals(List.of(ColumnType.DATE, ColumnType.TIME, ColumnType.TIMESTAMP), snapshot.columnTypes());
+            assertEquals(
+                    LocalDate.of(2026, 4, 7),
+                    SheetsTemporalSupport.asLocalDate(
+                            snapshot.rows().getFirst().cells().get(0).typedValue()));
+            assertEquals(
+                    LocalTime.of(9, 15, 30),
+                    SheetsTemporalSupport.asLocalTime(
+                            snapshot.rows().getFirst().cells().get(1).typedValue()));
+            assertEquals(
+                    LocalDateTime.of(2026, 4, 7, 9, 15, 30),
+                    SheetsTemporalSupport.asLocalDateTime(
+                            snapshot.rows().getFirst().cells().get(2).typedValue()));
+        }
+    }
+
     private static SpreadsheetSnapshot workbook() {
         WorksheetSnapshot employees = new WorksheetSnapshot(
                 101,
@@ -395,6 +464,24 @@ class OrriDriverTest {
     private static SpreadsheetSnapshot workbookWithoutViews() {
         WorksheetSnapshot employees = workbook().worksheets().getFirst();
         return new SpreadsheetSnapshot(List.of(employees), List.of());
+    }
+
+    private static SpreadsheetSnapshot temporalWorkbook() {
+        WorksheetSnapshot schedule = new WorksheetSnapshot(
+                102,
+                "Schedule",
+                List.of("Date", "Time", "Timestamp"),
+                List.of(ColumnType.DATE, ColumnType.TIME, ColumnType.TIMESTAMP),
+                List.of(new WorksheetRow(
+                        1,
+                        List.of(
+                                new CellValue(LocalDate.of(2026, 4, 7), "2026-04-07", ValueKind.DATE),
+                                new CellValue(LocalTime.of(9, 15, 30), "09:15:30", ValueKind.TIME),
+                                new CellValue(
+                                        LocalDateTime.of(2026, 4, 7, 9, 15, 30),
+                                        "2026-04-07 09:15:30",
+                                        ValueKind.TIMESTAMP)))));
+        return new SpreadsheetSnapshot(List.of(schedule), List.of());
     }
 
     private static Properties properties(String... values) {
