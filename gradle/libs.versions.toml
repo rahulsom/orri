@@ -1,7 +1,7 @@
 [versions]
 assertj = "3.27.7"
 google-api-client = "2.9.0"
-google-auth = "1.45.0"
+google-auth = "1.46.0"
 google-oauth-client = "1.39.0"
 google-sheets = "v4-rev20260213-2.0.0"
 h2 = "2.4.240"
