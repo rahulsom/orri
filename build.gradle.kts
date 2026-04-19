@@ -55,21 +55,18 @@ tasks.register<Exec>("asciidoctorDocs") {
     group = "documentation"
     notCompatibleWithConfigurationCache("Runs documentation generation in Docker via an external process.")
     commandLine(
-        dockerExecutable,
-        "run",
-        "--rm",
-        "-v",
-        "${rootProject.projectDir.absolutePath}:/documents",
-        "asciidoctor/docker-asciidoctor:main",
-        "asciidoctor",
-        "--destination-dir",
-        "docs/build",
-        "--backend=html5",
-        "--failure-level",
-        "WARN",
-        "--out-file",
-        "index.html",
-        "docs/src/index.adoc",
+        listOf(
+            listOf(dockerExecutable, "run"),
+            listOf("--rm"),
+            listOf("-v", "${rootProject.projectDir.absolutePath}:/documents"),
+            listOf("asciidoctor/docker-asciidoctor:main"),
+            listOf("asciidoctor"),
+            listOf("--destination-dir", "docs/build"),
+            listOf("--backend", "html5"),
+            listOf("--failure-level", "WARN"),
+            listOf("--out-file", "index.html"),
+            listOf("docs/src/index.adoc")
+        ).flatten()
     )
     inputs.file(layout.projectDirectory.file("docs/src/index.adoc"))
     outputs.file(layout.projectDirectory.file("docs/build/index.html"))
