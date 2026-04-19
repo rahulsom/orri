@@ -66,6 +66,15 @@ Use a service account or an OAuth access token for private spreadsheets.
 include::../../orri-jdbc/src/test/java/io/github/rahulsom/orri/DocumentationSamplesTest.java[tag=connect-api-key]
 ----
 
+To obtain an API key:
+
+1. Go to the link:https://console.cloud.google.com/[Google Cloud Console].
+2. Select or create a project.
+3. Enable the **Google Sheets API** in the API Library.
+4. Go to **APIs & Services > Credentials**.
+5. Click **+ Create Credentials** and select **API key**.
+6. (Recommended) Restrict the key to only the **Google Sheets API**.
+
 === Private Spreadsheet With A Service Account
 
 [source,java,indent=0]
