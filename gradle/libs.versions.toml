@@ -7,7 +7,7 @@ google-sheets = "v4-rev20260213-2.0.0"
 h2 = "2.4.240"
 junit = "6.0.1"
 spotless = "8.4.0"
-waena = "0.24.0"
+waena = "0.25.0"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
