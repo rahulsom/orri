@@ -1,6 +1,7 @@
 package io.github.rahulsom.orri;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -36,7 +37,9 @@ class OrriDriverIntegrationTest {
 
     @Test
     void performsEndToEndLifecycleAgainstOrri() throws Exception {
-        Path clientSecretPath = resourcePath("local/google-secret.json");
+        var resource = OrriDriverIntegrationTest.class.getClassLoader().getResource("local/google-secret.json");
+        assumeThat(resource).isNotNull().withFailMessage("Google secret not found");
+        Path clientSecretPath = Path.of(resource.toURI());
         String accessToken = authorize(clientSecretPath);
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String tableName = "Integration_" + suffix;
@@ -208,7 +211,9 @@ class OrriDriverIntegrationTest {
 
     @Test
     void createsAndQueriesTemporalWorksheetAgainstOrri() throws Exception {
-        Path clientSecretPath = resourcePath("local/google-secret.json");
+        var resource = OrriDriverIntegrationTest.class.getClassLoader().getResource("local/google-secret.json");
+        assumeThat(resource).isNotNull().withFailMessage("Google secret not found");
+        Path clientSecretPath = Path.of(resource.toURI());
         String accessToken = authorize(clientSecretPath);
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         String tableName = "Integration Temporal_" + suffix;
@@ -341,12 +346,6 @@ class OrriDriverIntegrationTest {
             statement.execute((view ? "drop view \"" : "drop table \"") + relationName + "\"");
         } catch (Exception ignored) {
         }
-    }
-
-    private static Path resourcePath(String resourceName) throws Exception {
-        var resource = OrriDriverIntegrationTest.class.getClassLoader().getResource(resourceName);
-        assertThat(resource).isNotNull();
-        return Path.of(resource.toURI());
     }
 
     private static String spreadsheetId() {
