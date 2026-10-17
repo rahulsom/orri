@@ -49,7 +49,8 @@ final class OrriJdbcProxy {
             }
         }
 
-        private Object setReadOnly(Object[] args) throws SQLException {
+        @SuppressWarnings("SameReturnValue") // The Invocation handler expects something to be returned
+        private Void setReadOnly(Object[] args) throws SQLException {
             boolean requestedReadOnly = args != null && args.length == 1 && Boolean.TRUE.equals(args[0]);
             if (requestedReadOnly != session.readOnly()) {
                 throw new SQLFeatureNotSupportedException(
