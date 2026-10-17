@@ -17,7 +17,7 @@ plugins {
 }
 
 allprojects {
-    apply(plugin = "com.diffplug.spotless")
+    plugins.apply("com.diffplug.spotless")
 
     group = "io.github.rahulsom"
 
