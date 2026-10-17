@@ -16,15 +16,19 @@ dependencies {
 
 testing {
     suites {
-        val test by getting(JvmTestSuite::class) {
+        named<JvmTestSuite>("test") {
             useJUnitJupiter(libs.versions.junit.get())
             targets.all {
                 testTask.configure {
                     listOf(
-                            "orri.integration",
-                            "orri.integration.spreadsheetId"
+                        "orri.integration",
+                        "orri.integration.spreadsheetId",
+                        "orri.integration.apiKey",
                     ).forEach { propertyName ->
                         System.getProperty(propertyName)?.let { value ->
+                            systemProperty(propertyName, value)
+                        }
+                        project.findProject(propertyName)?.let { value ->
                             systemProperty(propertyName, value)
                         }
                     }
