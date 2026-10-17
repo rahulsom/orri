@@ -38,7 +38,7 @@ class OrriDriverIntegrationTest {
     @Test
     void performsEndToEndLifecycleAgainstOrri() throws Exception {
         var resource = OrriDriverIntegrationTest.class.getClassLoader().getResource("local/google-secret.json");
-        assumeThat(resource).isNotNull().withFailMessage("Google secret not found");
+        assumeThat(resource).withFailMessage("Google secret not found").isNotNull();
         Path clientSecretPath = Path.of(resource.toURI());
         String accessToken = authorize(clientSecretPath);
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
@@ -212,7 +212,7 @@ class OrriDriverIntegrationTest {
     @Test
     void createsAndQueriesTemporalWorksheetAgainstOrri() throws Exception {
         var resource = OrriDriverIntegrationTest.class.getClassLoader().getResource("local/google-secret.json");
-        assumeThat(resource).isNotNull().withFailMessage("Google secret not found");
+        assumeThat(resource).withFailMessage("Google secret not found").isNotNull();
         Path clientSecretPath = Path.of(resource.toURI());
         String accessToken = authorize(clientSecretPath);
         String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
