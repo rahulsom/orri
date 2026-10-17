@@ -389,11 +389,10 @@ final class OrriJdbcProxy {
                 return;
             }
 
-            int updateCount =
-                    switch (delegate) {
-                        case Statement statement -> statement.getUpdateCount();
-                        default -> -1;
-                    };
+            int updateCount = switch (delegate) {
+                case Statement statement -> statement.getUpdateCount();
+                default -> -1;
+            };
             if (updateCount > 0) {
                 session.syncWorksheet(mutation.relationName());
             }
