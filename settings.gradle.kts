@@ -3,4 +3,4 @@ plugins {
 }
 
 rootProject.name = "orri"
-include("orri-jdbc")
+include("docs", "orri-jdbc")

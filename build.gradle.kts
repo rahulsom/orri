@@ -43,31 +43,3 @@ allprojects {
         }
     }
 }
-
-val dockerExecutable =
-    providers.environmentVariable("DOCKER_BIN").orNull?.takeIf { it.isNotBlank() }
-        ?: listOf("/usr/local/bin/docker", "/opt/homebrew/bin/docker", "/usr/bin/docker")
-            .firstOrNull { candidate -> rootProject.file(candidate).canExecute() }
-        ?: "docker"
-
-tasks.register<Exec>("asciidoctorDocs") {
-    description = "Generate Asciidoctor HTML docs in Docker"
-    group = "documentation"
-    notCompatibleWithConfigurationCache("Runs documentation generation in Docker via an external process.")
-    commandLine(
-        listOf(
-            listOf(dockerExecutable, "run"),
-            listOf("--rm"),
-            listOf("-v", "${rootProject.projectDir.absolutePath}:/documents"),
-            listOf("asciidoctor/docker-asciidoctor:main"),
-            listOf("asciidoctor"),
-            listOf("--destination-dir", "docs/build"),
-            listOf("--backend", "html5"),
-            listOf("--failure-level", "WARN"),
-            listOf("--out-file", "index.html"),
-            listOf("docs/src/index.adoc")
-        ).flatten()
-    )
-    inputs.file(layout.projectDirectory.file("docs/src/index.adoc"))
-    outputs.file(layout.projectDirectory.file("docs/build/index.html"))
-}
