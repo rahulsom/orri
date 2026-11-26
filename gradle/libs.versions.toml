@@ -1,4 +1,5 @@
 [versions]
+asciidoctor = "5.2.0"
 assertj = "3.27.7"
 google-api-client = "2.9.2"
 google-auth = "1.58.0"
@@ -18,6 +19,7 @@ google-sheets = { module = "com.google.apis:google-api-services-sheets", version
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 
 [plugins]
+asciidoctor = { id = "org.asciidoctor.jvm", version.ref = "asciidoctor" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 waena-published = { id = "com.github.rahulsom.waena.published" }
 waena-root = { id = "com.github.rahulsom.waena.root", version.ref = "waena" }

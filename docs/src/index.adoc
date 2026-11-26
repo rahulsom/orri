@@ -10,7 +10,7 @@
 :central-suffix: /overview"]
 :deprecated-middle: ?style=for-the-badge&label=R&color=lightgrey[alt=Maven Central Version,height=30,link="https://central.sonatype.com/artifact/{package}/
 :nofooter:
-:source-highlighter: rouge
+:source-highlighter: highlight.js
 :toc: left
 :icons: font
 

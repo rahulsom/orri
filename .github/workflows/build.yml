@@ -51,7 +51,7 @@ jobs:
         name: Setup Gradle
 
       - name: Build docs
-        run: ./gradlew asciidoctorDocs --no-daemon
+        run: ./gradlew :docs:asciidoctorHtml --no-daemon
 
       - name: Deploy docs to ghpages
         uses: peaceiris/actions-gh-pages@v4
@@ -59,4 +59,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./docs/build/
+          publish_dir: ./docs/build/docs/asciidoc/html/
