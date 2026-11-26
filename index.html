@@ -434,128 +434,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<style>
-pre.rouge table td { padding: 5px; }
-pre.rouge table pre { margin: 0; }
-pre.rouge, pre.rouge .w {
-  color: #24292f;
-  background-color: #f6f8fa;
-}
-pre.rouge .k, pre.rouge .kd, pre.rouge .kn, pre.rouge .kp, pre.rouge .kr, pre.rouge .kt, pre.rouge .kv {
-  color: #cf222e;
-}
-pre.rouge .gr {
-  color: #f6f8fa;
-}
-pre.rouge .gd {
-  color: #82071e;
-  background-color: #ffebe9;
-}
-pre.rouge .nb {
-  color: #953800;
-}
-pre.rouge .nc {
-  color: #953800;
-}
-pre.rouge .no {
-  color: #953800;
-}
-pre.rouge .nn {
-  color: #953800;
-}
-pre.rouge .sr {
-  color: #116329;
-}
-pre.rouge .na {
-  color: #116329;
-}
-pre.rouge .nt {
-  color: #116329;
-}
-pre.rouge .gi {
-  color: #116329;
-  background-color: #dafbe1;
-}
-pre.rouge .ges {
-  font-weight: bold;
-  font-style: italic;
-}
-pre.rouge .kc {
-  color: #0550ae;
-}
-pre.rouge .l, pre.rouge .ld, pre.rouge .m, pre.rouge .mb, pre.rouge .mf, pre.rouge .mh, pre.rouge .mi, pre.rouge .il, pre.rouge .mo, pre.rouge .mx {
-  color: #0550ae;
-}
-pre.rouge .sb {
-  color: #0550ae;
-}
-pre.rouge .bp {
-  color: #0550ae;
-}
-pre.rouge .ne {
-  color: #0550ae;
-}
-pre.rouge .nl {
-  color: #0550ae;
-}
-pre.rouge .py {
-  color: #0550ae;
-}
-pre.rouge .nv, pre.rouge .vc, pre.rouge .vg, pre.rouge .vi, pre.rouge .vm {
-  color: #0550ae;
-}
-pre.rouge .o, pre.rouge .ow {
-  color: #0550ae;
-}
-pre.rouge .gh {
-  color: #0550ae;
-  font-weight: bold;
-}
-pre.rouge .gu {
-  color: #0550ae;
-  font-weight: bold;
-}
-pre.rouge .s, pre.rouge .sa, pre.rouge .sc, pre.rouge .dl, pre.rouge .sd, pre.rouge .s2, pre.rouge .se, pre.rouge .sh, pre.rouge .sx, pre.rouge .s1, pre.rouge .ss {
-  color: #0a3069;
-}
-pre.rouge .nd {
-  color: #8250df;
-}
-pre.rouge .nf, pre.rouge .fm {
-  color: #8250df;
-}
-pre.rouge .err {
-  color: #f6f8fa;
-  background-color: #82071e;
-}
-pre.rouge .c, pre.rouge .ch, pre.rouge .cd, pre.rouge .cm, pre.rouge .cp, pre.rouge .cpf, pre.rouge .c1, pre.rouge .cs {
-  color: #6e7781;
-}
-pre.rouge .gl {
-  color: #6e7781;
-}
-pre.rouge .gt {
-  color: #6e7781;
-}
-pre.rouge .ni {
-  color: #24292f;
-}
-pre.rouge .si {
-  color: #24292f;
-}
-pre.rouge .ge {
-  color: #24292f;
-  font-style: italic;
-}
-pre.rouge .gs {
-  color: #24292f;
-  font-weight: bold;
-}
-</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
 </head>
 <body class="article toc2 toc-left">
 <div id="header">
 <h1>Orri</h1>
+<div class="details">
+<span id="revnumber">version 0.3.0-dev.66+d2968d3</span>
+</div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -596,10 +482,10 @@ pre.rouge .gs {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="gradle"><span class="k">dependencies</span> <span class="o">{</span>
-    <span class="c1">// ...</span>
-    <span class="n">implementation</span> <span class="s1">'io.github.rahulsom:orri-jdbc:&lt;VERSION&gt;'</span>
-<span class="o">}</span></code></pre>
+<pre class="highlightjs highlight"><code class="language-gradle hljs" data-lang="gradle">dependencies {
+    // ...
+    implementation 'io.github.rahulsom:orri-jdbc:&lt;VERSION&gt;'
+}</code></pre>
 </div>
 </div>
 </div>
@@ -625,7 +511,7 @@ Connections are writable by default for worksheet tables.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">String</span> <span class="no">SPREADSHEET_URL</span> <span class="o">=</span> <span class="s">"jdbc:orri:1yRm-oPjuUGvfy4uhGc-woytgXQ7nSpxalWVX9djruSQ"</span><span class="o">;</span></code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">private static final String SPREADSHEET_URL = "jdbc:orri:1yRm-oPjuUGvfy4uhGc-woytgXQ7nSpxalWVX9djruSQ";</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -648,11 +534,11 @@ Use a service account or an OAuth access token for private spreadsheets.</p>
 <h3 id="_public_spreadsheet_with_api_key">Public Spreadsheet With API Key</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="nc">Properties</span> <span class="n">properties</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Properties</span><span class="o">();</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">API_KEY_PROPERTY</span><span class="o">,</span> <span class="s">"your-google-api-key"</span><span class="o">);</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">READ_ONLY_PROPERTY</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Properties properties = new Properties();
+properties.setProperty(Constants.API_KEY_PROPERTY, "your-google-api-key");
+properties.setProperty(Constants.READ_ONLY_PROPERTY, "true");
 
-<span class="k">return</span> <span class="n">driver</span><span class="o">.</span><span class="na">connect</span><span class="o">(</span><span class="no">SPREADSHEET_URL</span><span class="o">,</span> <span class="n">properties</span><span class="o">);</span></code></pre>
+return driver.connect(SPREADSHEET_URL, properties);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -685,10 +571,10 @@ Use a service account or an OAuth access token for private spreadsheets.</p>
 <h3 id="_private_spreadsheet_with_a_service_account">Private Spreadsheet With A Service Account</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="nc">Properties</span> <span class="n">properties</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Properties</span><span class="o">();</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">CREDENTIALS_FILE_PROPERTY</span><span class="o">,</span> <span class="s">"/path/to/service-account.json"</span><span class="o">);</span>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Properties properties = new Properties();
+properties.setProperty(Constants.CREDENTIALS_FILE_PROPERTY, "/path/to/service-account.json");
 
-<span class="k">return</span> <span class="n">driver</span><span class="o">.</span><span class="na">connect</span><span class="o">(</span><span class="no">SPREADSHEET_URL</span><span class="o">,</span> <span class="n">properties</span><span class="o">);</span></code></pre>
+return driver.connect(SPREADSHEET_URL, properties);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -706,35 +592,35 @@ The service account must have access to the target spreadsheet.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="nc">Properties</span> <span class="n">properties</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Properties</span><span class="o">();</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">API_KEY_PROPERTY</span><span class="o">,</span> <span class="s">"your-google-api-key"</span><span class="o">);</span>
-<span class="n">properties</span><span class="o">.</span><span class="na">setProperty</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">READ_ONLY_PROPERTY</span><span class="o">,</span> <span class="s">"true"</span><span class="o">);</span>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Properties properties = new Properties();
+properties.setProperty(Constants.API_KEY_PROPERTY, "your-google-api-key");
+properties.setProperty(Constants.READ_ONLY_PROPERTY, "true");
 
-<span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">relations</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
-<span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">columns</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;&gt;();</span>
-<span class="k">try</span> <span class="o">(</span><span class="nc">Connection</span> <span class="n">connection</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="na">connect</span><span class="o">(</span><span class="no">SPREADSHEET_URL</span><span class="o">,</span> <span class="n">properties</span><span class="o">))</span> <span class="o">{</span>
-    <span class="nc">DatabaseMetaData</span> <span class="n">metaData</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="na">getMetaData</span><span class="o">();</span>
+List&lt;String&gt; relations = new ArrayList&lt;&gt;();
+List&lt;String&gt; columns = new ArrayList&lt;&gt;();
+try (Connection connection = driver.connect(SPREADSHEET_URL, properties)) {
+    DatabaseMetaData metaData = connection.getMetaData();
 
-    <span class="k">try</span> <span class="o">(</span><span class="nc">ResultSet</span> <span class="n">tables</span> <span class="o">=</span> <span class="n">metaData</span><span class="o">.</span><span class="na">getTables</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="s">"%"</span><span class="o">,</span> <span class="kc">null</span><span class="o">))</span> <span class="o">{</span>
-        <span class="k">while</span> <span class="o">(</span><span class="n">tables</span><span class="o">.</span><span class="na">next</span><span class="o">())</span> <span class="o">{</span>
-            <span class="nc">String</span> <span class="n">schemaName</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">TABLE_SCHEMA_COLUMN</span><span class="o">);</span>
-            <span class="nc">String</span> <span class="n">tableName</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">TABLE_NAME_COLUMN</span><span class="o">);</span>
-            <span class="nc">String</span> <span class="n">tableType</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="nc">Constants</span><span class="o">.</span><span class="na">TABLE_TYPE_COLUMN</span><span class="o">);</span>
-            <span class="k">if</span> <span class="o">(!</span><span class="nc">Constants</span><span class="o">.</span><span class="na">INFORMATION_SCHEMA</span><span class="o">.</span><span class="na">equalsIgnoreCase</span><span class="o">(</span><span class="n">schemaName</span><span class="o">))</span> <span class="o">{</span>
-                <span class="n">relations</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">tableName</span> <span class="o">+</span> <span class="s">" ("</span> <span class="o">+</span> <span class="n">normalizeTableType</span><span class="o">(</span><span class="n">tableType</span><span class="o">)</span> <span class="o">+</span> <span class="s">")"</span><span class="o">);</span>
-            <span class="o">}</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
+    try (ResultSet tables = metaData.getTables(null, null, "%", null)) {
+        while (tables.next()) {
+            String schemaName = tables.getString(Constants.TABLE_SCHEMA_COLUMN);
+            String tableName = tables.getString(Constants.TABLE_NAME_COLUMN);
+            String tableType = tables.getString(Constants.TABLE_TYPE_COLUMN);
+            if (!Constants.INFORMATION_SCHEMA.equalsIgnoreCase(schemaName)) {
+                relations.add(tableName + " (" + normalizeTableType(tableType) + ")");
+            }
+        }
+    }
 
-    <span class="k">try</span> <span class="o">(</span><span class="nc">ResultSet</span> <span class="n">resultSet</span> <span class="o">=</span> <span class="n">metaData</span><span class="o">.</span><span class="na">getColumns</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="s">"Employees"</span><span class="o">,</span> <span class="s">"%"</span><span class="o">))</span> <span class="o">{</span>
-        <span class="k">while</span> <span class="o">(</span><span class="n">resultSet</span><span class="o">.</span><span class="na">next</span><span class="o">())</span> <span class="o">{</span>
-            <span class="nc">String</span> <span class="n">columnName</span> <span class="o">=</span> <span class="n">resultSet</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="s">"COLUMN_NAME"</span><span class="o">);</span>
-            <span class="nc">String</span> <span class="n">typeName</span> <span class="o">=</span> <span class="n">resultSet</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="s">"TYPE_NAME"</span><span class="o">);</span>
-            <span class="n">columns</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">columnName</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">normalizeTypeName</span><span class="o">(</span><span class="n">typeName</span><span class="o">));</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-<span class="k">return</span> <span class="k">new</span> <span class="nf">SchemaSnapshot</span><span class="o">(</span><span class="n">relations</span><span class="o">,</span> <span class="n">columns</span><span class="o">);</span></code></pre>
+    try (ResultSet resultSet = metaData.getColumns(null, null, "Employees", "%")) {
+        while (resultSet.next()) {
+            String columnName = resultSet.getString("COLUMN_NAME");
+            String typeName = resultSet.getString("TYPE_NAME");
+            columns.add(columnName + " " + normalizeTypeName(typeName));
+        }
+    }
+}
+return new SchemaSnapshot(relations, columns);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -751,13 +637,13 @@ Filter views are reported as <code>VIEW</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">statement.execute("""
         create table "%s" (
             "Name" varchar,
             "Active" boolean,
             "Score" decimal(10, 2)
         )
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">tableName</span><span class="o">));</span></code></pre>
+        """.formatted(tableName));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -765,13 +651,13 @@ Filter views are reported as <code>VIEW</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">statement.execute("""
         create view "%s" as
         select "Name", "Active"
         from "%s"
         where "Active" = true
         order by "Name"
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">viewName</span><span class="o">,</span> <span class="n">tableName</span><span class="o">));</span></code></pre>
+        """.formatted(viewName, tableName));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -779,9 +665,9 @@ Filter views are reported as <code>VIEW</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="s">"drop view \"%s\""</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedViewName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="s">"drop table \"%s\""</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedAlterTableName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="s">"drop table \"%s\""</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">tableName</span><span class="o">));</span></code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">statement.execute("drop view \"%s\"".formatted(renamedViewName));
+statement.execute("drop table \"%s\"".formatted(renamedAlterTableName));
+statement.execute("drop table \"%s\"".formatted(tableName));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -789,52 +675,52 @@ Filter views are reported as <code>VIEW</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">statement.execute("""
         create table "%s" (
             "Name" varchar,
             "Score" decimal(10, 2)
         )
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">alterTableName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">executeUpdate</span><span class="o">(</span><span class="sh">"""
+        """.formatted(alterTableName));
+statement.executeUpdate("""
         insert into "%s" ("Name", "Score") values
         ('Ada', 10.5)
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">alterTableName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+        """.formatted(alterTableName));
+statement.execute("""
         alter table "%s"
         rename to "%s"
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">alterTableName</span><span class="o">,</span> <span class="n">renamedAlterTableName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+        """.formatted(alterTableName, renamedAlterTableName));
+statement.execute("""
         alter table "%s"
         add column "Notes" varchar
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedAlterTableName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">executeUpdate</span><span class="o">(</span><span class="sh">"""
+        """.formatted(renamedAlterTableName));
+statement.executeUpdate("""
         update "%s"
         set "Notes" = 'top performer'
         where "Name" = 'Ada'
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedAlterTableName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+        """.formatted(renamedAlterTableName));
+statement.execute("""
         alter table "%s"
         alter column "Notes"
         rename to "Comment"
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedAlterTableName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+        """.formatted(renamedAlterTableName));
+statement.execute("""
         alter table "%s"
         drop column "Score"
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedAlterTableName</span><span class="o">));</span></code></pre>
+        """.formatted(renamedAlterTableName));</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">statement.execute("""
         alter view "%s"
         rename to "%s"
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">viewName</span><span class="o">,</span> <span class="n">renamedViewName</span><span class="o">));</span>
-<span class="n">statement</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="sh">"""
+        """.formatted(viewName, renamedViewName));
+statement.execute("""
         alter view "%s" as
         select "Name"
         from "%s"
         where "Name" = 'Ada'
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedViewName</span><span class="o">,</span> <span class="n">tableName</span><span class="o">));</span></code></pre>
+        """.formatted(renamedViewName, tableName));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -856,25 +742,25 @@ Filter views are reported as <code>VIEW</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="n">statement</span><span class="o">.</span><span class="na">executeUpdate</span><span class="o">(</span><span class="sh">"""
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">statement.executeUpdate("""
         insert into "%s" ("Name", "Active", "Score") values
         ('Ada', true, 10.5),
         ('Bob', false, 7.25),
         ('Cy', true, 9.75),
         ('Dee', false, 5.50),
         ('Eve', true, 8.00)
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">tableName</span><span class="o">));</span>
+        """.formatted(tableName));
 
-<span class="n">statement</span><span class="o">.</span><span class="na">executeUpdate</span><span class="o">(</span><span class="sh">"""
+statement.executeUpdate("""
         update "%s"
         set "Active" = true, "Score" = 6.50
         where "Name" = 'Dee'
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">tableName</span><span class="o">));</span>
+        """.formatted(tableName));
 
-<span class="n">statement</span><span class="o">.</span><span class="na">executeUpdate</span><span class="o">(</span><span class="sh">"""
+statement.executeUpdate("""
         delete from "%s"
         where "Name" = 'Bob'
-        """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">tableName</span><span class="o">));</span></code></pre>
+        """.formatted(tableName));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -893,21 +779,21 @@ Filter views use their filter view titles as view names.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="java"><span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">finalRows</span> <span class="o">=</span> <span class="n">selectRows</span><span class="o">(</span><span class="n">statement</span><span class="o">,</span> <span class="sh">"""
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">List&lt;String&gt; finalRows = selectRows(statement, """
                 select "Name", "Active", "Score"
                 from "%s"
                 order by "Name"
-                """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">tableName</span><span class="o">));</span>
-<span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">alteredTableRows</span> <span class="o">=</span> <span class="n">selectRows</span><span class="o">(</span><span class="n">statement</span><span class="o">,</span> <span class="sh">"""
+                """.formatted(tableName));
+List&lt;String&gt; alteredTableRows = selectRows(statement, """
                 select "Name", "Comment"
                 from "%s"
                 order by "Name"
-                """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedAlterTableName</span><span class="o">));</span>
-<span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">finalViewRows</span> <span class="o">=</span> <span class="n">selectRows</span><span class="o">(</span><span class="n">statement</span><span class="o">,</span> <span class="sh">"""
+                """.formatted(renamedAlterTableName));
+List&lt;String&gt; finalViewRows = selectRows(statement, """
                 select "Name"
                 from "%s"
                 order by "Name"
-                """</span><span class="o">.</span><span class="na">formatted</span><span class="o">(</span><span class="n">renamedViewName</span><span class="o">));</span></code></pre>
+                """.formatted(renamedViewName));</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -953,5 +839,12 @@ Quoted identifiers are recommended when sheet names or filter view names contain
 </div>
 </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
 </body>
 </html>
